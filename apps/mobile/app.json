@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Fichaje App",
+    "slug": "fichaje-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "fichajeapp",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2563eb"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.fichajeapp.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Necesitamos tu ubicación para validar el fichaje en tu centro de trabajo.",
+        "NSLocationAlwaysUsageDescription": "Necesitamos tu ubicación para el registro de fichajes.",
+        "NSCameraUsageDescription": "Necesitamos la cámara para escanear QR de fichaje."
+      }
+    },
+    "android": {
+      "package": "com.fichajeapp.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2563eb"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-location",
+      [
+        "expo-notifications",
+        { "sounds": [] }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

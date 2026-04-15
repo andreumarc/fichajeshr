@@ -1,0 +1,54 @@
+# ── Dependencies ──────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build outputs ─────────────────────────────────────────────
+dist/
+build/
+.next/
+out/
+
+# ── Environment variables (NEVER commit these) ─────────────────
+.env
+.env.local
+.env.development
+.env.production
+.env.prod
+.env.staging
+# Keep .env.example files (they are safe templates)
+!.env.example
+!**/.env.example
+
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# ── OS / IDE ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json
+
+# ── Test & coverage ───────────────────────────────────────────
+coverage/
+*.lcov
+
+# ── Turborepo / Caching ───────────────────────────────────────
+.turbo/
+.cache/
+
+# ── Uploads (user content, not code) ──────────────────────────
+uploads/
+
+# ── Prisma generated ──────────────────────────────────────────
+# prisma/migrations can be committed (they are code)
+# but generated client is not needed
+apps/backend/node_modules/
+
+# ── Misc ──────────────────────────────────────────────────────
+*.tsbuildinfo
+.eslintcache

@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sidebar-width: 256px;
+  }
+
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { @apply bg-slate-50 text-slate-800 antialiased; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-200 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-300; }
+}
+
+@layer components {
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl
+           transition-all duration-150 focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none select-none;
+  }
+  .btn-primary {
+    @apply btn px-5 py-2.5 bg-brand-700 text-white hover:bg-brand-800 active:scale-[.98]
+           shadow-sm focus-visible:ring-brand-500;
+  }
+  .btn-secondary {
+    @apply btn px-5 py-2.5 bg-white text-brand-700 border border-brand-200
+           hover:bg-brand-50 active:scale-[.98] shadow-sm focus-visible:ring-brand-400;
+  }
+  .btn-accent {
+    @apply btn px-5 py-2.5 bg-accent-500 text-white hover:bg-accent-600 active:scale-[.98]
+           shadow-sm focus-visible:ring-accent-400;
+  }
+  .btn-danger {
+    @apply btn px-5 py-2.5 bg-rose-600 text-white hover:bg-rose-700 active:scale-[.98]
+           shadow-sm focus-visible:ring-rose-500;
+  }
+  .btn-ghost {
+    @apply btn px-4 py-2 text-brand-700 hover:bg-brand-50 hover:text-brand-800 active:scale-[.98];
+  }
+
+  /* Cards */
+  .card { @apply bg-white rounded-2xl border border-slate-100 shadow-sm p-5; }
+  .card-hover { @apply card transition-all duration-200 hover:shadow-md hover:border-slate-200 cursor-pointer; }
+
+  /* Inputs */
+  .label { @apply block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5; }
+  .input {
+    @apply w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800
+           placeholder:text-slate-400
+           focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400
+           transition-all duration-150;
+  }
+
+  /* Badges */
+  .badge { @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap; }
+  .badge-green  { @apply badge bg-emerald-50  text-emerald-700 ring-1 ring-emerald-200; }
+  .badge-blue   { @apply badge bg-brand-50    text-brand-700   ring-1 ring-brand-200; }
+  .badge-accent { @apply badge bg-accent-50   text-accent-700  ring-1 ring-accent-200; }
+  .badge-red    { @apply badge bg-rose-50     text-rose-700    ring-1 ring-rose-200; }
+  .badge-yellow { @apply badge bg-amber-50    text-amber-700   ring-1 ring-amber-200; }
+  .badge-gray   { @apply badge bg-slate-100   text-slate-600   ring-1 ring-slate-200; }
+  .badge-purple { @apply badge bg-purple-50   text-purple-700  ring-1 ring-purple-200; }
+
+  /* Table */
+  .table-header {
+    @apply text-left py-3 px-4 text-[11px] font-bold text-brand-700
+           uppercase tracking-widest bg-brand-50 border-b border-brand-100;
+  }
+  .table-cell { @apply py-3.5 px-4 text-sm text-slate-700; }
+
+  /* Kiosk */
+  .kiosk-mode { @apply select-none; }
+  .kiosk-btn {
+    @apply flex flex-col items-center justify-center gap-3 rounded-3xl font-bold text-xl
+           transition-all duration-150 active:scale-[.96] shadow-xl select-none touch-manipulation cursor-pointer;
+  }
+  .pin-dot { @apply w-4 h-4 rounded-full transition-all duration-150; }
+}
+
+@layer utilities {
+  .animate-fade-in  { animation: fadeIn  0.25s ease-out both; }
+  .animate-slide-up { animation: slideUp 0.3s  ease-out both; }
+  .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4,0,0.6,1) infinite; }
+  @keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
+  @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  .text-balance { text-wrap: balance; }
+  .glass { @apply backdrop-blur-xl bg-white/10 border border-white/20; }
+}
