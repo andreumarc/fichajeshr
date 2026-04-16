@@ -2,16 +2,9 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  Clock,
-  LogOut,
-  Menu,
-  ChevronRight,
-  Shield,
-  X,
-  Lock,
+  LayoutDashboard, Building2, Users, Clock, LogOut, Menu,
+  ChevronRight, Shield, Lock, Bell,
+  ChevronLeft, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,223 +15,295 @@ import ChangePasswordModal from '@/components/ChangePasswordModal';
 import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 import '@/lib/i18n';
 
-function Avatar({ name }: { name: string }) {
-  const initials = name
-    ?.split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase() ?? '?';
+/* ─── helpers ─────────────────────────────────────────────────── */
+function getInitials(firstName = '', lastName = '') {
+  return ((firstName[0] ?? '') + (lastName[0] ?? '')).toUpperCase() || '?';
+}
+
+function UserAvatar({ firstName = '', lastName = '', size = 'md' }: { firstName?: string; lastName?: string; size?: 'sm' | 'md' | 'lg' }) {
+  const initials = getInitials(firstName, lastName);
+  const sz = size === 'sm' ? 'w-7 h-7 text-[11px]' : size === 'lg' ? 'w-10 h-10 text-sm' : 'w-8 h-8 text-xs';
   return (
-    <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold bg-accent-500/25 text-accent-300 ring-1 ring-accent-400/40 flex-shrink-0 text-sm">
+    <div className={clsx('rounded-full flex items-center justify-center font-bold flex-shrink-0 bg-[#1e3a5f] text-white ring-2 ring-white/20', sz)}>
       {initials}
     </div>
   );
 }
 
-function AvatarSm({ name }: { name: string }) {
-  const initials = name
-    ?.split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase() ?? '?';
-  return (
-    <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold bg-accent-500/25 text-accent-300 ring-1 ring-accent-400/40 flex-shrink-0 text-xs">
-      {initials}
-    </div>
-  );
-}
+/* ─── nav definition ──────────────────────────────────────────── */
+const NAV_GROUPS = [
+  {
+    key: 'platform',
+    label: 'PLATAFORMA',
+    items: [
+      { href: '/superadmin/dashboard',    labelKey: 'superadmin.nav.dashboard',   icon: LayoutDashboard },
+      { href: '/superadmin/companies',    labelKey: 'superadmin.nav.companies',    icon: Building2 },
+      { href: '/superadmin/employees',    labelKey: 'superadmin.nav.employees',    icon: Users },
+      { href: '/superadmin/time-entries', labelKey: 'superadmin.nav.timeEntries', icon: Clock },
+    ],
+  },
+];
 
+/* ─── layout ──────────────────────────────────────────────────── */
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { t } = useTranslation();
-  const [sidebarOpen, setSidebarOpen]     = useState(false);
-  const [user, setUser]                   = useState<any>({});
+  const router   = useRouter();
+  const { t }    = useTranslation();
+
+  const [collapsed,     setCollapsed]     = useState(false);
+  const [mobileOpen,    setMobileOpen]    = useState(false);
+  const [user,          setUser]          = useState<any>({});
   const [showChangePwd, setShowChangePwd] = useState(false);
 
   useEffect(() => {
-    try {
-      setUser(JSON.parse(Cookies.get('user') ?? '{}'));
-    } catch { setUser({}); }
+    try { setUser(JSON.parse(Cookies.get('user') ?? '{}')); } catch { setUser({}); }
   }, []);
-
-  const navItems = [
-    { href: '/superadmin/dashboard',    label: t('superadmin.nav.dashboard'),   icon: LayoutDashboard },
-    { href: '/superadmin/companies',    label: t('superadmin.nav.companies'),    icon: Building2 },
-    { href: '/superadmin/employees',    label: t('superadmin.nav.employees'),    icon: Users },
-    { href: '/superadmin/time-entries', label: t('superadmin.nav.timeEntries'), icon: Clock },
-  ];
 
   const handleLogout = async () => {
     const refreshToken = Cookies.get('refresh_token');
     await api.post('/auth/logout', { refreshToken }).catch(() => {});
-    ['access_token', 'refresh_token', 'user'].forEach((k) => Cookies.remove(k));
+    ['access_token', 'refresh_token', 'user'].forEach(k => Cookies.remove(k));
     router.push('/login');
   };
 
-  const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
-  const currentItem = navItems.find((i) => pathname === i.href || pathname.startsWith(i.href + '/'));
+  const allItems = NAV_GROUPS.flatMap(g => g.items);
+  const activePage = allItems.find(i => pathname === i.href || pathname.startsWith(i.href + '/'));
 
-  const Sidebar = () => (
-    <div className="flex flex-col h-full bg-brand-700">
-
-      {/* Logo + MASTER badge */}
-      <div className="px-5 h-16 flex items-center gap-3 border-b border-white/10 flex-shrink-0">
-        <div className="w-9 h-9 bg-accent-500 rounded-xl flex items-center justify-center shadow-lg shadow-brand-900/30">
+  /* ── Sidebar inner ─────────────────────────────────────────── */
+  const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
+    <div className={clsx(
+      'flex flex-col h-full bg-[#0f2744] transition-all duration-300 ease-in-out',
+      !mobile && (collapsed ? 'w-[68px]' : 'w-[220px]'),
+    )}>
+      {/* Logo */}
+      <div className={clsx(
+        'h-16 flex items-center border-b border-white/10 flex-shrink-0',
+        collapsed && !mobile ? 'px-4 justify-center' : 'px-5 gap-3',
+      )}>
+        <div className="w-9 h-9 bg-[#1aad8d] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
           <Shield size={17} className="text-white" />
         </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="font-bold text-white text-sm leading-none tracking-tight">Fichaje App</p>
-            <span className="px-1.5 py-0.5 bg-accent-500 text-white rounded-md text-[9px] font-bold tracking-wider uppercase leading-none">
-              MASTER
-            </span>
+        {(!collapsed || mobile) && (
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="font-bold text-white text-sm leading-none tracking-tight">Fichaje App</p>
+              <span className="px-1.5 py-0.5 bg-[#1aad8d] text-white rounded-md text-[9px] font-bold tracking-wider uppercase leading-none">
+                MASTER
+              </span>
+            </div>
+            <p className="text-white/40 text-[10px] mt-0.5">Panel SaaS Admin</p>
           </div>
-          <p className="text-brand-200 text-[11px] mt-0.5">Panel SaaS Admin</p>
-        </div>
+        )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
-        <p className="px-3 mb-3 text-[10px] font-bold uppercase tracking-widest text-brand-300/70">
-          Plataforma
-        </p>
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setSidebarOpen(false)}
-              className={clsx(
-                'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                isActive
-                  ? 'bg-accent-500 text-white shadow-md shadow-brand-900/30'
-                  : 'text-brand-100/70 hover:bg-white/10 hover:text-white',
-              )}
-            >
-              <item.icon
-                size={16}
-                className={clsx(
-                  'flex-shrink-0',
-                  isActive ? 'text-white' : 'text-brand-200/70 group-hover:text-white',
-                )}
-              />
-              <span className="flex-1 leading-none">{item.label}</span>
-              {isActive && <ChevronRight size={13} className="opacity-70" />}
-            </Link>
-          );
-        })}
+      {/* Navigation */}
+      <nav className="flex-1 px-2 py-4 space-y-4 overflow-y-auto">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.key}>
+            {(!collapsed || mobile) && (
+              <p className="px-3 mb-2 text-[9px] font-bold uppercase tracking-[0.15em] text-white/35">
+                {group.label}
+              </p>
+            )}
+            {collapsed && !mobile && <div className="border-t border-white/10 mb-2 mx-2" />}
+
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    title={collapsed && !mobile ? t(item.labelKey as any) : undefined}
+                    className={clsx(
+                      'group flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150',
+                      collapsed && !mobile ? 'px-0 py-2.5 justify-center' : 'px-3 py-2.5',
+                      isActive
+                        ? 'bg-[#1aad8d] text-white shadow-md'
+                        : 'text-white/60 hover:bg-white/10 hover:text-white',
+                    )}
+                  >
+                    <item.icon
+                      size={16}
+                      className={clsx(
+                        'flex-shrink-0 transition-colors',
+                        isActive ? 'text-white' : 'text-white/50 group-hover:text-white',
+                      )}
+                    />
+                    {(!collapsed || mobile) && (
+                      <>
+                        <span className="flex-1 leading-none">{t(item.labelKey as any)}</span>
+                        {isActive && <ChevronRight size={12} className="opacity-80" />}
+                      </>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      {/* User footer */}
-      <div className="px-3 py-3 border-t border-white/10 flex-shrink-0 space-y-2">
-        {/* Language switcher */}
-        <div className="flex items-center justify-center px-2">
-          <LanguageSwitcher variant="light" />
-        </div>
-        <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-white/10 transition-colors">
-          <Avatar name={fullName} />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate leading-none">{fullName}</p>
-            <p className="text-xs text-brand-200/70 mt-0.5">{t('roles.SUPERADMIN')}</p>
+      {/* Collapse button — desktop only */}
+      {!mobile && (
+        <button
+          onClick={() => setCollapsed(c => !c)}
+          className={clsx(
+            'flex items-center gap-2 mx-2 mb-3 px-3 py-2.5 rounded-xl text-xs text-white/40 hover:text-white/70 hover:bg-white/10 transition-all duration-150 border border-white/10',
+            collapsed ? 'justify-center' : '',
+          )}
+        >
+          {collapsed
+            ? <ChevronRightIcon size={14} />
+            : (
+              <>
+                <ChevronLeft size={14} />
+                <span className="font-medium">Colapsar</span>
+              </>
+            )
+          }
+        </button>
+      )}
+
+      {/* User strip */}
+      <div className={clsx(
+        'border-t border-white/10 flex-shrink-0 px-2 py-2',
+        collapsed && !mobile ? 'flex flex-col items-center gap-2' : '',
+      )}>
+        {(!collapsed || mobile) ? (
+          <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl">
+            <UserAvatar firstName={user.firstName} lastName={user.lastName} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-white truncate leading-none">
+                {user.firstName} {user.lastName}
+              </p>
+              <p className="text-[10px] text-white/40 mt-0.5">{t('roles.SUPERADMIN')}</p>
+            </div>
+            <button
+              onClick={() => setShowChangePwd(true)}
+              title="Cambiar contraseña"
+              className="p-1.5 text-white/30 hover:text-white/70 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <Lock size={13} />
+            </button>
+            <button
+              onClick={handleLogout}
+              title="Cerrar sesión"
+              className="p-1.5 text-white/30 hover:text-rose-300 hover:bg-rose-500/15 rounded-lg transition-colors"
+            >
+              <LogOut size={13} />
+            </button>
           </div>
-          <button
-            onClick={() => setShowChangePwd(true)}
-            title={t('nav.changePassword')}
-            className="p-1.5 text-brand-200/60 hover:text-brand-100 hover:bg-white/15 rounded-lg transition-colors"
-          >
-            <Lock size={14} />
-          </button>
-          <button
-            onClick={handleLogout}
-            title={t('nav.logout')}
-            className="p-1.5 text-brand-200/60 hover:text-rose-300 hover:bg-rose-500/15 rounded-lg transition-colors"
-          >
-            <LogOut size={14} />
-          </button>
-        </div>
+        ) : (
+          <>
+            <UserAvatar firstName={user.firstName} lastName={user.lastName} size="sm" />
+            <button
+              onClick={handleLogout}
+              title="Cerrar sesión"
+              className="p-1.5 text-white/30 hover:text-rose-300 hover:bg-rose-500/15 rounded-lg transition-colors"
+            >
+              <LogOut size={13} />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
 
+  /* ── Root layout ───────────────────────────────────────────── */
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-white overflow-hidden">
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-[var(--sidebar-width)] flex-shrink-0">
-        <Sidebar />
+      <aside className="hidden lg:flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out">
+        <SidebarContent />
       </aside>
 
       {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
+      {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-brand-900/70 backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute left-0 top-0 bottom-0 w-[var(--sidebar-width)] shadow-2xl">
-            <Sidebar />
+          <aside className="absolute left-0 top-0 bottom-0 w-[220px] shadow-2xl">
+            <SidebarContent mobile />
           </aside>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="absolute top-4 right-4 p-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-colors"
-          >
-            <X size={18} />
-          </button>
         </div>
       )}
 
-      {/* Main content */}
+      {/* Content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* Mobile header */}
-        <header className="lg:hidden h-14 bg-brand-700 border-b border-white/10 px-4 flex items-center gap-3 flex-shrink-0">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            <Menu size={20} className="text-white" />
-          </button>
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-accent-500 rounded-lg flex items-center justify-center">
-              <Shield size={13} className="text-white" />
-            </div>
-            <span className="font-bold text-white text-sm">Fichaje App</span>
-            <span className="px-1.5 py-0.5 bg-accent-500 text-white rounded-md text-[9px] font-bold tracking-wider uppercase">
-              MASTER
-            </span>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <LanguageSwitcher variant="light" />
-            <AvatarSm name={fullName} />
-          </div>
-        </header>
+        {/* Top bar */}
+        <header className="h-14 bg-white border-b border-slate-100 flex items-center px-4 lg:px-6 gap-4 flex-shrink-0 shadow-sm">
 
-        {/* Top bar (desktop) */}
-        <div className="hidden lg:flex items-center justify-between px-8 py-3.5 bg-white border-b border-slate-100 shadow-sm flex-shrink-0">
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            {currentItem && (
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+          >
+            <Menu size={20} className="text-slate-600" />
+          </button>
+
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm min-w-0">
+            <span className="text-slate-400 hidden sm:block">Superadmin</span>
+            {activePage && (
               <>
-                <span className="text-slate-300">/</span>
-                <span className="font-semibold text-brand-700">{currentItem.label}</span>
+                <ChevronRight size={14} className="text-slate-300 hidden sm:block flex-shrink-0" />
+                <span className="font-semibold text-[#0f2744] truncate">
+                  {t(activePage.labelKey as any)}
+                </span>
               </>
             )}
           </div>
-          <div className="flex items-center gap-3 text-xs text-slate-400">
-            <LanguageSwitcher />
-            <span className="w-1.5 h-1.5 bg-accent-500 rounded-full animate-pulse" />
-            <span>{fullName}</span>
-            <span className="text-slate-200">·</span>
-            <span className="text-accent-600 font-semibold">{t('roles.SUPERADMIN')}</span>
-          </div>
-        </div>
 
-        {/* Page scroll container */}
+          {/* Right side */}
+          <div className="ml-auto flex items-center gap-2">
+            <div className="hidden sm:block">
+              <LanguageSwitcher />
+            </div>
+
+            {/* Notification bell */}
+            <button className="relative p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-500 hover:text-slate-700">
+              <Bell size={18} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#1aad8d] rounded-full ring-2 ring-white" />
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-8 bg-slate-100 mx-1" />
+
+            {/* User info */}
+            <button
+              onClick={() => setShowChangePwd(true)}
+              className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-slate-50 transition-colors group"
+            >
+              <UserAvatar firstName={user.firstName} lastName={user.lastName} size="md" />
+              <div className="hidden sm:flex flex-col items-start min-w-0">
+                <span className="text-xs font-semibold text-[#0f2744] leading-none truncate max-w-[140px]">
+                  {user.firstName} {user.lastName}
+                </span>
+                <span className="text-[10px] text-slate-400 mt-0.5">{t('roles.SUPERADMIN')}</span>
+              </div>
+              <ChevronRight size={13} className="text-slate-300 hidden sm:block group-hover:text-slate-500 transition-colors" />
+            </button>
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              title="Cerrar sesión"
+              className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        </header>
+
+        {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-slate-50">
-          <div className="max-w-[1400px] mx-auto px-6 lg:px-8 py-7">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {children}
           </div>
         </main>
