@@ -1,0 +1,792 @@
+// ============================================================
+// FICHAJE SAAS - Prisma Schema
+// PostgreSQL + full audit trail + multitenancy
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // DIRECT_URL: non-pooled connection for Prisma migrations (required by Supabase)
+  // Leave unset for local dev — Prisma falls back to url
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  SUPERADMIN
+  COMPANY_ADMIN
+  HR
+  MANAGER
+  EMPLOYEE
+  KIOSK
+}
+
+enum TimeEntryType {
+  CHECK_IN
+  CHECK_OUT
+  BREAK_START
+  BREAK_END
+  CENTER_CHANGE
+  INCIDENT
+}
+
+enum TimeEntryStatus {
+  VALID
+  OUT_OF_ZONE
+  MANUAL
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum IncidentStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum IncidentType {
+  MISSING_CHECK_IN
+  MISSING_CHECK_OUT
+  OUT_OF_ZONE
+  LATE_ARRIVAL
+  EARLY_DEPARTURE
+  EXTRA_HOURS
+  MANUAL_CORRECTION
+  OTHER
+}
+
+enum DeviceType {
+  MOBILE_IOS
+  MOBILE_ANDROID
+  WEB_BROWSER
+  KIOSK
+  UNKNOWN
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+  CLOCK_IN
+  CLOCK_OUT
+  BREAK_START
+  BREAK_END
+  MANUAL_EDIT
+  EXPORT
+  CONFIG_CHANGE
+  PASSWORD_RESET
+  PIN_RESET
+  PERMISSION_CHANGE
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  ON_LEAVE
+}
+
+enum ClockMethod {
+  EMAIL_PASSWORD
+  PIN
+  EMPLOYEE_CODE
+  QR_CODE
+  NFC
+}
+
+// ============================================================
+// COMPANY (tenant)
+// ============================================================
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  taxId       String?  @unique
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  country     String   @default("ES")
+  logoUrl     String?
+  timezone    String   @default("Europe/Madrid")
+  locale      String   @default("es")
+  isActive    Boolean  @default(true)
+  settings    Json     @default("{}")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  workCenters  WorkCenter[]
+  employees    Employee[]
+  users        User[]
+  geofenceRules GeofenceRule[]
+  auditLogs    AuditLog[]
+  timeEntries  TimeEntry[]
+  workSchedules  WorkSchedule[]
+
+  @@index([isActive])
+  @@map("companies")
+}
+
+// ============================================================
+// WORK CENTER
+// ============================================================
+
+model WorkCenter {
+  id              String   @id @default(cuid())
+  companyId       String
+  name            String
+  code            String?
+  address         String?
+  city            String?
+  country         String   @default("ES")
+  latitude        Float?
+  longitude       Float?
+  radiusMeters    Int      @default(200)
+  timezone        String   @default("Europe/Madrid")
+  isActive        Boolean  @default(true)
+  allowRemote     Boolean  @default(false)
+  requireGps      Boolean  @default(true)
+  scheduleConfig  Json     @default("{}")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+
+  // Relations
+  company         Company       @relation(fields: [companyId], references: [id])
+  employees       Employee[]
+  timeEntries     TimeEntry[]
+  geofenceRules   GeofenceRule[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([isActive])
+  @@map("work_centers")
+}
+
+// ============================================================
+// EMPLOYEE
+// ============================================================
+
+model Employee {
+  id               String         @id @default(cuid())
+  companyId        String
+  workCenterId     String?
+  supervisorId     String?
+
+  // Personal info
+  firstName        String
+  lastName         String
+  fullName         String
+  dni              String?
+  email            String?
+  phone            String?
+
+  // Work info
+  employeeCode     String
+  department       String?
+  position         String?
+  contractType     String?
+  hireDate         DateTime?
+
+  // Access
+  status           EmployeeStatus @default(ACTIVE)
+  allowedMethods   ClockMethod[]  @default([EMAIL_PASSWORD, PIN, EMPLOYEE_CODE])
+  allowMobile      Boolean        @default(true)
+  allowWeb         Boolean        @default(true)
+  allowKiosk       Boolean        @default(true)
+
+  // Shift config
+  weeklyHours      Float?
+  shiftConfig      Json           @default("{}")
+
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?
+  createdBy        String?
+  updatedBy        String?
+
+  // Relations
+  company          Company        @relation(fields: [companyId], references: [id])
+  workCenter       WorkCenter?    @relation(fields: [workCenterId], references: [id])
+  supervisor       Employee?      @relation("EmployeeSupervisor", fields: [supervisorId], references: [id])
+  subordinates     Employee[]     @relation("EmployeeSupervisor")
+  credentials          EmployeeCredential[]
+  timeEntries          TimeEntry[]
+  incidents            Incident[]
+  user                 User?
+  whatsappConversation WhatsAppConversation?
+  schedules         EmployeeSchedule[]
+  leaveRequests     LeaveRequest[]
+  leaveBalances     LeaveBalance[]
+
+  @@unique([companyId, employeeCode])
+  @@index([companyId])
+  @@index([workCenterId])
+  @@index([status])
+  @@map("employees")
+}
+
+// ============================================================
+// EMPLOYEE CREDENTIALS (PIN, QR, etc.)
+// ============================================================
+
+model EmployeeCredential {
+  id           String      @id @default(cuid())
+  employeeId   String
+  method       ClockMethod
+  secret       String      // hashed PIN, QR token, NFC uid, etc.
+  isActive     Boolean     @default(true)
+  lastUsed     DateTime?
+  expiresAt    DateTime?
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  createdBy    String?
+
+  // Relations
+  employee     Employee    @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, method])
+  @@index([employeeId])
+  @@map("employee_credentials")
+}
+
+// ============================================================
+// USER (system login - admin, HR, manager, etc.)
+// ============================================================
+
+model User {
+  id           String     @id @default(cuid())
+  companyId    String?
+  employeeId   String?    @unique
+  email        String     @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole   @default(EMPLOYEE)
+  isActive     Boolean    @default(true)
+  lastLogin    DateTime?
+  loginAttempts Int       @default(0)
+  lockedUntil  DateTime?
+  mustChangePassword Boolean @default(false)
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+  createdBy    String?
+  updatedBy    String?
+
+  // Relations
+  company      Company?   @relation(fields: [companyId], references: [id])
+  employee     Employee?  @relation(fields: [employeeId], references: [id])
+  sessions     UserSession[]
+  auditLogs    AuditLog[]
+
+  @@index([email])
+  @@index([companyId])
+  @@index([role])
+  @@map("users")
+}
+
+// ============================================================
+// USER SESSION
+// ============================================================
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  refreshToken String   @unique
+  deviceInfo   String?
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  isRevoked    Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@map("user_sessions")
+}
+
+// ============================================================
+// TIME ENTRY (fichaje)
+// ============================================================
+
+model TimeEntry {
+  id              String          @id @default(cuid())
+  companyId       String
+  employeeId      String
+  workCenterId    String?
+
+  type            TimeEntryType
+  status          TimeEntryStatus @default(VALID)
+
+  // Timestamp
+  timestamp       DateTime
+  serverTimestamp DateTime        @default(now())
+
+  // Geolocation
+  latitude        Float?
+  longitude       Float?
+  accuracy        Float?
+  altitude        Float?
+  distanceToCenter Float?
+  isWithinZone    Boolean?
+  geofenceRuleId  String?
+
+  // Device info
+  deviceType      DeviceType      @default(UNKNOWN)
+  deviceId        String?
+  ipAddress       String?
+  userAgent       String?
+  appVersion      String?
+
+  // Method used
+  clockMethod     ClockMethod     @default(EMAIL_PASSWORD)
+
+  // Extra
+  notes           String?
+  isManual        Boolean         @default(false)
+  isOffline       Boolean         @default(false)
+  syncedAt        DateTime?
+
+  // Audit
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  createdBy       String?
+  updatedBy       String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+
+  // Relations
+  company         Company         @relation(fields: [companyId], references: [id])
+  employee        Employee        @relation(fields: [employeeId], references: [id])
+  workCenter      WorkCenter?     @relation(fields: [workCenterId], references: [id])
+  geofenceRule    GeofenceRule?   @relation(fields: [geofenceRuleId], references: [id])
+  incident        Incident?
+  breaks          BreakRecord[]
+
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([timestamp])
+  @@index([type])
+  @@index([status])
+  @@index([workCenterId])
+  @@map("time_entries")
+}
+
+// ============================================================
+// BREAK RECORD
+// ============================================================
+
+model BreakRecord {
+  id            String    @id @default(cuid())
+  timeEntryId   String    // CHECK_IN entry this break belongs to
+  employeeId    String
+
+  breakStart    DateTime
+  breakEnd      DateTime?
+  durationMin   Int?      // calculated on close
+  notes         String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  timeEntry     TimeEntry @relation(fields: [timeEntryId], references: [id])
+
+  @@index([timeEntryId])
+  @@index([employeeId])
+  @@map("break_records")
+}
+
+// ============================================================
+// INCIDENT
+// ============================================================
+
+model Incident {
+  id            String         @id @default(cuid())
+  companyId     String
+  employeeId    String
+  timeEntryId   String?        @unique
+
+  type          IncidentType
+  status        IncidentStatus @default(OPEN)
+  description   String
+  resolution    String?
+
+  occurredAt    DateTime
+  resolvedAt    DateTime?
+  resolvedBy    String?
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  createdBy     String?
+
+  // Relations
+  employee      Employee       @relation(fields: [employeeId], references: [id])
+  timeEntry     TimeEntry?     @relation(fields: [timeEntryId], references: [id])
+
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([status])
+  @@map("incidents")
+}
+
+// ============================================================
+// GEOFENCE RULE
+// ============================================================
+
+model GeofenceRule {
+  id              String     @id @default(cuid())
+  companyId       String
+  workCenterId    String
+  name            String
+  latitude        Float
+  longitude       Float
+  radiusMeters    Int        @default(200)
+  toleranceMeters Int        @default(50)
+  isActive        Boolean    @default(true)
+  blockOutOfZone  Boolean    @default(false)
+  allowException  Boolean    @default(true)
+  scheduleConfig  Json       @default("{}")
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  createdBy       String?
+
+  // Relations
+  company         Company    @relation(fields: [companyId], references: [id])
+  workCenter      WorkCenter @relation(fields: [workCenterId], references: [id])
+  timeEntries     TimeEntry[]
+
+  @@index([companyId])
+  @@index([workCenterId])
+  @@map("geofence_rules")
+}
+
+// ============================================================
+// DEVICE LOG
+// ============================================================
+
+model DeviceLog {
+  id           String     @id @default(cuid())
+  employeeId   String?
+  userId       String?
+  companyId    String?
+
+  deviceType   DeviceType
+  deviceId     String?
+  platform     String?
+  appVersion   String?
+  ipAddress    String?
+  userAgent    String?
+  latitude     Float?
+  longitude    Float?
+
+  action       String
+  metadata     Json       @default("{}")
+
+  createdAt    DateTime   @default(now())
+
+  @@index([employeeId])
+  @@index([companyId])
+  @@index([createdAt])
+  @@map("device_logs")
+}
+
+// ============================================================
+// WHATSAPP — Conversational state + messages
+// ============================================================
+
+enum WhatsAppMessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum WhatsAppMessageType {
+  TEXT
+  LOCATION
+  IMAGE
+  DOCUMENT
+  BUTTON
+  TEMPLATE
+  INTERACTIVE
+}
+
+enum WhatsAppConversationState {
+  IDLE
+  AWAITING_LOCATION
+  AWAITING_CONFIRMATION
+}
+
+model WhatsAppConversation {
+  id                String                     @id @default(cuid())
+  companyId         String
+  employeeId        String                     @unique
+  phone             String                     @unique
+
+  // Conversational FSM state
+  state             WhatsAppConversationState  @default(IDLE)
+  pendingIntent     String?                    // CHECK_IN | CHECK_OUT | BREAK_START | BREAK_END
+  pendingContext    Json?                      // extra data for the pending action
+  contextExpiresAt  DateTime?                  // TTL: 5 minutes from intent capture
+
+  lastMessageAt     DateTime?
+  messageCount      Int                        @default(0)
+
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+
+  employee          Employee                   @relation(fields: [employeeId], references: [id])
+  messages          WhatsAppMessage[]
+
+  @@index([phone])
+  @@index([employeeId])
+  @@map("whatsapp_conversations")
+}
+
+model WhatsAppMessage {
+  id                String                     @id @default(cuid())
+  companyId         String?
+  employeeId        String?
+  conversationId    String?
+
+  providerMessageId String?                    @unique
+  direction         WhatsAppMessageDirection
+  type              WhatsAppMessageType        @default(TEXT)
+
+  fromPhone         String?
+  toPhone           String?
+  body              String?
+
+  latitude          Float?
+  longitude         Float?
+
+  intentParsed      String?
+  timeEntryId       String?
+
+  rawPayload        Json?
+
+  createdAt         DateTime                   @default(now())
+
+  conversation      WhatsAppConversation?      @relation(fields: [conversationId], references: [id])
+
+  @@index([conversationId])
+  @@index([employeeId])
+  @@map("whatsapp_messages")
+}
+
+model WhatsAppTemplate {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  type        String
+  content     String
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([companyId, name])
+  @@map("whatsapp_templates")
+}
+
+// ============================================================
+// AUDIT LOG
+// ============================================================
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  companyId    String?
+  userId       String?
+  employeeId   String?
+
+  action       AuditAction
+  entityType   String      // "TimeEntry", "Employee", etc.
+  entityId     String?
+
+  before       Json?       // previous state
+  after        Json?       // new state
+  diff         Json?       // diff
+
+  ipAddress    String?
+  userAgent    String?
+  description  String?
+  metadata     Json        @default("{}")
+
+  createdAt    DateTime    @default(now())
+
+  // Relations
+  company      Company?    @relation(fields: [companyId], references: [id])
+  user         User?       @relation(fields: [userId], references: [id])
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================================
+// SCHEDULES & LEAVE MANAGEMENT
+// ============================================================
+
+enum ScheduleType {
+  MORNING
+  AFTERNOON
+  ROTATING
+  SPLIT
+  CUSTOM
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum LeaveType {
+  VACATION
+  PERSONAL_DAY
+  SICK_LEAVE
+  MATERNITY
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model WorkSchedule {
+  id           String             @id @default(cuid())
+  companyId    String
+  name         String
+  type         ScheduleType
+  description  String?
+  weeklyHours  Float
+  annualHours  Float?
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  deletedAt    DateTime?
+  createdBy    String?
+
+  company      Company            @relation(fields: [companyId], references: [id])
+  days         WorkScheduleDay[]
+  assignments  EmployeeSchedule[]
+
+  @@index([companyId])
+  @@map("work_schedules")
+}
+
+model WorkScheduleDay {
+  id            String      @id @default(cuid())
+  scheduleId    String
+  dayOfWeek     DayOfWeek
+  isWorkDay     Boolean     @default(true)
+  startTime     String?
+  endTime       String?
+  breakMinutes  Int         @default(0)
+  startTime2    String?
+  endTime2      String?
+
+  schedule      WorkSchedule @relation(fields: [scheduleId], references: [id])
+
+  @@unique([scheduleId, dayOfWeek])
+  @@map("work_schedule_days")
+}
+
+model EmployeeSchedule {
+  id           String       @id @default(cuid())
+  employeeId   String
+  scheduleId   String
+  startDate    DateTime
+  endDate      DateTime?
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  createdBy    String?
+
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+  schedule     WorkSchedule @relation(fields: [scheduleId], references: [id])
+
+  @@index([employeeId])
+  @@index([scheduleId])
+  @@map("employee_schedules")
+}
+
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  companyId    String
+  employeeId   String
+  type         LeaveType
+  status       LeaveStatus @default(PENDING)
+  startDate    DateTime
+  endDate      DateTime
+  days         Float
+  reason       String?
+  hrNotes      String?
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+
+  employee     Employee    @relation(fields: [employeeId], references: [id])
+
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([status])
+  @@map("leave_requests")
+}
+
+model LeaveBalance {
+  id             String   @id @default(cuid())
+  companyId      String
+  employeeId     String
+  year           Int
+  vacationDays   Float    @default(22)
+  vacationUsed   Float    @default(0)
+  personalDays   Float    @default(6)
+  personalUsed   Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  employee       Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, year])
+  @@index([companyId])
+  @@map("leave_balances")
+}
