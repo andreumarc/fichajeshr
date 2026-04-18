@@ -1,5 +1,6 @@
 'use client';
-import { Clock, Fingerprint } from 'lucide-react';
+import { Fingerprint } from 'lucide-react';
+import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import { useEffect, useState } from 'react';
@@ -27,9 +28,7 @@ export function KioskWelcome({ companyId, onStart }: Props) {
     <div className="flex flex-col items-center justify-between h-full text-white animate-fade-in px-8 py-12">
       {/* Top: logo */}
       <div className="flex items-center gap-3 self-start">
-        <div className="w-10 h-10 bg-white/15 rounded-2xl flex items-center justify-center ring-1 ring-white/20 backdrop-blur-sm">
-          <Clock size={20} className="text-white" />
-        </div>
+        <ImpulsoDentIcon size={40} bg="rgba(255,255,255,0.15)" />
         <div>
           <p className="font-bold text-white text-base leading-none">Terminal Fichaje</p>
           <p className="text-white/50 text-xs mt-0.5">Control de presencia</p>

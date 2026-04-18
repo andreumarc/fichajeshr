@@ -33,12 +33,13 @@ async function main() {
   await prisma.company.deleteMany();
 
   const passwordHash = await bcrypt.hash('Admin123!', 12);
+  const demoPasswordHash = await bcrypt.hash('Demo2026!', 12);
 
   // ---- SUPERADMIN ----
   await prisma.user.create({
     data: {
-      email: 'superadmin@fichaje.app',
-      passwordHash: await bcrypt.hash('SuperAdmin123!', 12),
+      email: 'marcandreueguerao@gmail.com',
+      passwordHash: await bcrypt.hash('Admin1234!', 12),
       firstName: 'Super',
       lastName: 'Admin',
       role: UserRole.SUPERADMIN,
@@ -270,6 +271,18 @@ async function main() {
     },
   });
 
+  // ---- DEMO USER (solo lectura, sin empresa asignada) ----
+  await prisma.user.create({
+    data: {
+      email: 'demo@impulsodent.com',
+      passwordHash: demoPasswordHash,
+      firstName: 'Demo',
+      lastName: 'ImpulsoDent',
+      role: UserRole.DEMO,
+      isActive: true,
+    },
+  });
+
   // ---- SAMPLE TIME ENTRIES (last 7 days) ----
   const now = new Date();
   const employees = [emp1, emp2, emp3];
@@ -375,7 +388,7 @@ async function main() {
   console.log('✅ Seed completed!');
   console.log('');
   console.log('📋 Test credentials:');
-  console.log('  Superadmin:    superadmin@fichaje.app / SuperAdmin123!');
+  console.log('  Superadmin:    marcandreueguerao@gmail.com / Admin1234!');
   console.log('  Company Admin: admin@techcorp.es      / Admin123!');
   console.log('  HR:            rrhh@techcorp.es        / Admin123!');
   console.log('  Employee 1:    ana.garcia@techcorp.es  / Admin123!  PIN: 1234');

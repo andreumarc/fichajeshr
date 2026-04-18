@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
-import { Clock, Eye, EyeOff, ShieldCheck, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, Loader2 } from 'lucide-react';
+import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
 
 export default function SetPasswordPage() {
   const router = useRouter();
@@ -50,11 +51,9 @@ export default function SetPasswordPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8 justify-center">
-          <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center shadow">
-            <Clock size={20} className="text-white" />
-          </div>
+          <ImpulsoDentIcon size={40} />
           <div>
-            <p className="font-bold text-brand-800 text-base leading-none">Fichaje App</p>
+            <p className="font-bold text-brand-800 text-base leading-none">FichajeHR</p>
             <p className="text-slate-400 text-xs">Control Horario</p>
           </div>
         </div>

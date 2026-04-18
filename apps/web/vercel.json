@@ -3,10 +3,6 @@
   "buildCommand": "prisma generate && next build",
   "installCommand": "npm install",
   "env": {
-    "DATABASE_URL": "@database_url",
-    "DIRECT_URL": "@direct_url",
-    "JWT_SECRET": "@jwt_secret",
-    "JWT_REFRESH_SECRET": "@jwt_refresh_secret",
     "JWT_EXPIRES_IN": "15m",
     "JWT_REFRESH_EXPIRES_IN": "7d",
     "NODE_ENV": "production"

@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
 import { Clock, Eye, EyeOff, Loader2, ShieldCheck, Smartphone, MapPin, X, KeyRound } from 'lucide-react';
+import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
 
 const schema = z.object({
   email:    z.string().email('Email inválido'),
@@ -102,10 +103,8 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: ACCENT }}>
-            <Clock size={20} className="text-white" />
-          </div>
-          <span className="text-white font-bold text-lg">Fichaje App</span>
+          <ImpulsoDentIcon size={40} bg="#0d9488" />
+          <span className="text-white font-bold text-lg">FichajeHR</span>
         </div>
 
         {/* Copy */}
@@ -138,10 +137,8 @@ export default function LoginPage() {
 
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2.5 mb-10">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: BRAND }}>
-              <Clock size={18} className="text-white" />
-            </div>
-            <span className="font-bold text-sm" style={{ color: BRAND }}>Fichaje App</span>
+            <ImpulsoDentIcon size={36} />
+            <span className="font-bold text-sm" style={{ color: BRAND }}>FichajeHR</span>
           </div>
 
           {/* Heading */}
@@ -224,7 +221,7 @@ export default function LoginPage() {
             <div className="space-y-1 text-xs text-gray-500">
               <p>
                 <span className="text-gray-600">Admin: </span>
-                <span className="font-medium" style={{ color: ACCENT }}>superadmin@fichaje.app</span>
+                <span className="font-medium" style={{ color: ACCENT }}>superadmin@fichajeshr.app</span>
                 <span className="text-gray-600"> / SuperAdmin123!</span>
               </p>
               <p>
@@ -253,7 +250,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <p className="mt-8 text-center text-[11px] text-gray-300">
-            © 2026 Fichaje App. Todos los derechos reservados.
+            © 2026 FichajeHR. Todos los derechos reservados.
           </p>
         </div>
       </div>

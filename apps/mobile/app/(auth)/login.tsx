@@ -46,7 +46,7 @@ export default function LoginScreen() {
           <View style={styles.logoBox}>
             <Ionicons name="time-outline" size={36} color="white" />
           </View>
-          <Text style={styles.title}>Fichaje App</Text>
+          <Text style={styles.title}>FichajeHR</Text>
           <Text style={styles.subtitle}>Control horario profesional</Text>
         </View>
 

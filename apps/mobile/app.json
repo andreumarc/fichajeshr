@@ -1,20 +1,20 @@
 {
   "expo": {
-    "name": "Fichaje App",
-    "slug": "fichaje-app",
+    "name": "FichajeHR",
+    "slug": "fichajeshr",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "fichajeapp",
+    "scheme": "fichajeshr",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2563eb"
+      "backgroundColor": "#003A70"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.fichajeapp.mobile",
+      "bundleIdentifier": "com.fichajeshr.mobile",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Necesitamos tu ubicación para validar el fichaje en tu centro de trabajo.",
         "NSLocationAlwaysUsageDescription": "Necesitamos tu ubicación para el registro de fichajes.",
@@ -22,10 +22,10 @@
       }
     },
     "android": {
-      "package": "com.fichajeapp.mobile",
+      "package": "com.fichajeshr.mobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#2563eb"
+        "backgroundColor": "#003A70"
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",

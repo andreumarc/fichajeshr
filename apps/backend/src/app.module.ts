@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { DemoReadonlyGuard } from './auth/guards/demo-readonly.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
@@ -41,5 +43,8 @@ import { MailModule } from './mail/mail.module';
     MailModule,
   ],
   controllers: [HealthController],
+  providers: [
+    { provide: APP_GUARD, useClass: DemoReadonlyGuard },
+  ],
 })
 export class AppModule {}

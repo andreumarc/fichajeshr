@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Fichaje App - Control Horario',
-  description: 'Plataforma profesional de fichaje laboral con geolocalización',
+  title: 'FichajeHR - Control Horario',
+  description: 'Plataforma profesional de control horario con geolocalización',
   manifest: '/manifest.json',
   themeColor: '#003A70',
 };

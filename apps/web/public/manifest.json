@@ -1,6 +1,6 @@
 {
-  "name": "Fichaje App",
-  "short_name": "Fichaje",
+  "name": "FichajeHR",
+  "short_name": "FichajeHR",
   "description": "Control horario con geolocalización",
   "start_url": "/",
   "display": "standalone",

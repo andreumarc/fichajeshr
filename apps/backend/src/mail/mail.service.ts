@@ -118,7 +118,7 @@ export class MailService {
   }
 
   private async send(opts: { to: string; subject: string; html: string }) {
-    const from = this.config.get('SMTP_FROM') ?? 'Fichaje App <noreply@fichaje.app>';
+    const from = this.config.get('SMTP_FROM') ?? 'FichajeHR <noreply@fichajeshr.app>';
     if (!this.transporter) {
       // Dev mode: log to console instead
       this.logger.log(`📧 [EMAIL NOT SENT — configure SMTP]\n  To: ${opts.to}\n  Subject: ${opts.subject}`);

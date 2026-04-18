@@ -7,6 +7,7 @@ import {
   CalendarDays, CalendarOff, Lock, Bell, Menu,
   ChevronLeft, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
+import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
@@ -128,13 +129,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     try { setUser(JSON.parse(Cookies.get('user') ?? '{}')); } catch { setUser({}); }
     // restore sidebar state
-    const stored = localStorage.getItem('fichaje-sidebar-collapsed');
+    const stored = localStorage.getItem('fichajeshr-sidebar-collapsed');
     if (stored !== null) setCollapsed(stored === 'true');
   }, []);
 
   const toggleCollapsed = () => {
     setCollapsed(c => {
-      localStorage.setItem('fichaje-sidebar-collapsed', String(!c));
+      localStorage.setItem('fichajeshr-sidebar-collapsed', String(!c));
       return !c;
     });
   };
@@ -165,15 +166,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           )}
           style={{ borderBottom: `1px solid ${S.BORDER}` }}
         >
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: S.LOGO_ICON }}
-          >
-            <Clock style={{ width: 18, height: 18, color: '#fff' }} />
-          </div>
+          <ImpulsoDentIcon size={36} bg={S.LOGO_ICON} className="flex-shrink-0" />
           {!isCollapsed && (
             <div className="min-w-0">
-              <p className="text-white font-bold text-sm leading-none">Fichaje App</p>
+              <p className="text-white font-bold text-sm leading-none">FichajeHR</p>
               <p className="text-xs mt-0.5 truncate" style={{ color: S.GROUP }}>
                 {user.company?.name ?? 'Panel Admin'}
               </p>

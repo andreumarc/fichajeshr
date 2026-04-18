@@ -12,6 +12,7 @@ import Cookies from 'js-cookie';
 import api from '@/lib/api';
 import clsx from 'clsx';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
+import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
 import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 import '@/lib/i18n';
 
@@ -135,13 +136,13 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
 
   useEffect(() => {
     try { setUser(JSON.parse(Cookies.get('user') ?? '{}')); } catch { setUser({}); }
-    const stored = localStorage.getItem('fichaje-sa-sidebar-collapsed');
+    const stored = localStorage.getItem('fichajeshr-sa-sidebar-collapsed');
     if (stored !== null) setCollapsed(stored === 'true');
   }, []);
 
   const toggleCollapsed = () => {
     setCollapsed(c => {
-      localStorage.setItem('fichaje-sa-sidebar-collapsed', String(!c));
+      localStorage.setItem('fichajeshr-sa-sidebar-collapsed', String(!c));
       return !c;
     });
   };
@@ -172,16 +173,11 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
           )}
           style={{ borderBottom: `1px solid ${S.BORDER}` }}
         >
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: S.LOGO_ICON }}
-          >
-            <Shield style={{ width: 17, height: 17, color: '#fff' }} />
-          </div>
+          <ImpulsoDentIcon size={36} bg={S.LOGO_ICON} className="flex-shrink-0" />
           {!isColl && (
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <p className="text-white font-bold text-sm leading-none">Fichaje App</p>
+                <p className="text-white font-bold text-sm leading-none">FichajeHR</p>
                 <span
                   className="px-1.5 py-0.5 rounded-md text-[9px] font-bold tracking-wider uppercase leading-none text-white"
                   style={{ background: S.LOGO_ICON }}
