@@ -4,8 +4,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Users, Clock, Building2, BarChart3, FileText,
   Settings, LogOut, ShieldCheck, ChevronRight, MessageSquare,
-  CalendarDays, CalendarOff, Lock, Bell, Menu, ChevronLeft,
-  ChevronRight as ChevronRightIcon,
+  CalendarDays, CalendarOff, Lock, Bell, Menu,
+  ChevronLeft, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,17 +16,31 @@ import api from '@/lib/api';
 import clsx from 'clsx';
 import '@/lib/i18n';
 
+/* ─── ImpulsoDent Design System — Sidebar tokens ─────────────── */
+const S = {
+  BG:           '#0b1929',
+  ACTIVE_BG:    '#22c55e',
+  ACTIVE_TEXT:  '#ffffff',
+  INACTIVE:     '#8ba8c0',
+  GROUP:        '#3d5a75',
+  HOVER:        'rgba(255,255,255,0.07)',
+  BORDER:       'rgba(255,255,255,0.08)',
+  LOGO_ICON:    '#0d9488',
+  AVATAR_BG:    '#0d9488',
+} as const;
+
 /* ─── helpers ─────────────────────────────────────────────────── */
 function getInitials(firstName = '', lastName = '') {
   return ((firstName[0] ?? '') + (lastName[0] ?? '')).toUpperCase() || '?';
 }
 
-function UserAvatar({ firstName = '', lastName = '', size = 'md' }: { firstName?: string; lastName?: string; size?: 'sm' | 'md' | 'lg' }) {
-  const initials = getInitials(firstName, lastName);
-  const sz = size === 'sm' ? 'w-7 h-7 text-[11px]' : size === 'lg' ? 'w-10 h-10 text-sm' : 'w-8 h-8 text-xs';
+function TopbarAvatar({ firstName = '', lastName = '' }: { firstName?: string; lastName?: string }) {
   return (
-    <div className={clsx('rounded-full flex items-center justify-center font-bold flex-shrink-0 bg-[#1e3a5f] text-white ring-2 ring-white/20', sz)}>
-      {initials}
+    <div
+      className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm text-white flex-shrink-0"
+      style={{ background: S.AVATAR_BG }}
+    >
+      {getInitials(firstName, lastName)}
     </div>
   );
 }
@@ -46,11 +60,11 @@ const NAV_GROUPS = [
     key: 'admin',
     label: 'ADMINISTRACIÓN',
     items: [
-      { href: '/admin/employees',      labelKey: 'nav.employees',     icon: Users,       roles: undefined },
-      { href: '/admin/work-centers',   labelKey: 'nav.workCenters',   icon: Building2,   roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
-      { href: '/admin/leave-requests', labelKey: 'nav.leaveRequests', icon: CalendarOff, roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
-      { href: '/admin/incidents',      labelKey: 'nav.incidents',     icon: FileText,    roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
-      { href: '/admin/reports',        labelKey: 'nav.reports',       icon: BarChart3,   roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/employees',      labelKey: 'nav.employees',     icon: Users,         roles: undefined },
+      { href: '/admin/work-centers',   labelKey: 'nav.workCenters',   icon: Building2,     roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
+      { href: '/admin/leave-requests', labelKey: 'nav.leaveRequests', icon: CalendarOff,   roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
+      { href: '/admin/incidents',      labelKey: 'nav.incidents',     icon: FileText,      roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/reports',        labelKey: 'nav.reports',       icon: BarChart3,     roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
       { href: '/admin/whatsapp',       labelKey: 'nav.whatsapp',      icon: MessageSquare, roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
     ],
   },
@@ -63,6 +77,42 @@ const NAV_GROUPS = [
     ],
   },
 ];
+
+/* ─── NavItem with hover via state ───────────────────────────── */
+function NavItem({
+  href, label, Icon, isActive, collapsed, onClick,
+}: {
+  href: string; label: string; Icon: React.ElementType;
+  isActive: boolean; collapsed: boolean; onClick?: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  const bg    = isActive ? S.ACTIVE_BG : hovered ? S.HOVER : 'transparent';
+  const color = isActive ? S.ACTIVE_TEXT : S.INACTIVE;
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      title={collapsed ? label : undefined}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ background: bg, color }}
+      className={clsx(
+        'flex items-center gap-3 rounded-lg text-sm font-medium transition-colors duration-150',
+        collapsed ? 'px-0 py-2.5 justify-center' : 'px-3 py-2.5',
+      )}
+    >
+      <Icon style={{ width: 18, height: 18, color, flexShrink: 0 }} />
+      {!collapsed && (
+        <>
+          <span className="truncate flex-1">{label}</span>
+          {isActive && <ChevronRight style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.7)' }} />}
+        </>
+      )}
+    </Link>
+  );
+}
 
 /* ─── layout ──────────────────────────────────────────────────── */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -77,7 +127,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     try { setUser(JSON.parse(Cookies.get('user') ?? '{}')); } catch { setUser({}); }
+    // restore sidebar state
+    const stored = localStorage.getItem('fichaje-sidebar-collapsed');
+    if (stored !== null) setCollapsed(stored === 'true');
   }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed(c => {
+      localStorage.setItem('fichaje-sidebar-collapsed', String(!c));
+      return !c;
+    });
+  };
 
   const handleLogout = async () => {
     const refreshToken = Cookies.get('refresh_token');
@@ -86,259 +146,272 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push('/login');
   };
 
-  /* resolve active page label for breadcrumb */
-  const allItems = NAV_GROUPS.flatMap(g => g.items);
+  const allItems  = NAV_GROUPS.flatMap(g => g.items);
   const activePage = allItems.find(i => pathname === i.href || pathname.startsWith(i.href + '/'));
 
-  /* ── Sidebar inner ─────────────────────────────────────────── */
-  const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className={clsx(
-      'flex flex-col h-full bg-[#0f2744] transition-all duration-300 ease-in-out',
-      !mobile && (collapsed ? 'w-[68px]' : 'w-[220px]'),
-    )}>
-      {/* Logo */}
-      <div className={clsx(
-        'h-16 flex items-center border-b border-white/10 flex-shrink-0',
-        collapsed && !mobile ? 'px-4 justify-center' : 'px-5 gap-3',
-      )}>
-        <div className="w-9 h-9 bg-[#1aad8d] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-          <Clock size={18} className="text-white" />
-        </div>
-        {(!collapsed || mobile) && (
-          <div className="min-w-0">
-            <p className="font-bold text-white text-sm leading-none tracking-tight">Fichaje App</p>
-            <p className="text-white/50 text-[10px] mt-0.5 truncate">
-              {user.company?.name ?? 'Panel Admin'}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 px-2 py-4 space-y-4 overflow-y-auto">
-        {NAV_GROUPS.map((group) => {
-          const visibleItems = group.items.filter(
-            item => !item.roles || item.roles.includes(user.role),
-          );
-          if (visibleItems.length === 0) return null;
-          return (
-            <div key={group.key}>
-              {/* Section label — hidden when collapsed */}
-              {(!collapsed || mobile) && (
-                <p className="px-3 mb-2 text-[9px] font-bold uppercase tracking-[0.15em] text-white/35">
-                  {group.label}
-                </p>
-              )}
-              {collapsed && !mobile && <div className="border-t border-white/10 mb-2 mx-2" />}
-
-              <div className="space-y-0.5">
-                {visibleItems.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      title={collapsed && !mobile ? t(item.labelKey as any) : undefined}
-                      className={clsx(
-                        'group flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150',
-                        collapsed && !mobile ? 'px-0 py-2.5 justify-center' : 'px-3 py-2.5',
-                        isActive
-                          ? 'bg-[#1aad8d] text-white shadow-md'
-                          : 'text-white/60 hover:bg-white/10 hover:text-white',
-                      )}
-                    >
-                      <item.icon
-                        size={16}
-                        className={clsx(
-                          'flex-shrink-0 transition-colors',
-                          isActive ? 'text-white' : 'text-white/50 group-hover:text-white',
-                        )}
-                      />
-                      {(!collapsed || mobile) && (
-                        <>
-                          <span className="flex-1 leading-none">{t(item.labelKey as any)}</span>
-                          {isActive && <ChevronRight size={12} className="opacity-80" />}
-                        </>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </nav>
-
-      {/* Collapse button — desktop only */}
-      {!mobile && (
-        <button
-          onClick={() => setCollapsed(c => !c)}
+  /* ── Sidebar ────────────────────────────────────────────────── */
+  const SidebarInner = ({ mobile = false }: { mobile?: boolean }) => {
+    const isCollapsed = mobile ? false : collapsed;
+    return (
+      <div
+        className="flex flex-col h-full"
+        style={{ background: S.BG, width: isCollapsed ? 64 : 256 }}
+      >
+        {/* Logo */}
+        <div
           className={clsx(
-            'flex items-center gap-2 mx-2 mb-3 px-3 py-2.5 rounded-xl text-xs text-white/40 hover:text-white/70 hover:bg-white/10 transition-all duration-150 border border-white/10',
-            collapsed ? 'justify-center' : '',
+            'flex items-center flex-shrink-0 py-5',
+            isCollapsed ? 'px-4 justify-center' : 'px-4 gap-3',
           )}
+          style={{ borderBottom: `1px solid ${S.BORDER}` }}
         >
-          {collapsed
-            ? <ChevronRightIcon size={14} />
-            : (
-              <>
-                <ChevronLeft size={14} />
-                <span className="font-medium">Colapsar</span>
-              </>
-            )
-          }
-        </button>
-      )}
-
-      {/* User strip */}
-      <div className={clsx(
-        'border-t border-white/10 flex-shrink-0 px-2 py-2',
-        collapsed && !mobile ? 'flex flex-col items-center gap-2' : '',
-      )}>
-        {(!collapsed || mobile) ? (
-          <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl">
-            <UserAvatar firstName={user.firstName} lastName={user.lastName} />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-white truncate leading-none">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="text-[10px] text-white/40 mt-0.5">{t(`roles.${user.role}` as any) ?? user.role}</p>
-            </div>
-            <button
-              onClick={() => setShowChangePwd(true)}
-              title="Cambiar contraseña"
-              className="p-1.5 text-white/30 hover:text-white/70 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <Lock size={13} />
-            </button>
-            <button
-              onClick={handleLogout}
-              title="Cerrar sesión"
-              className="p-1.5 text-white/30 hover:text-rose-300 hover:bg-rose-500/15 rounded-lg transition-colors"
-            >
-              <LogOut size={13} />
-            </button>
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: S.LOGO_ICON }}
+          >
+            <Clock style={{ width: 18, height: 18, color: '#fff' }} />
           </div>
-        ) : (
-          <>
-            <UserAvatar firstName={user.firstName} lastName={user.lastName} size="sm" />
-            <button
-              onClick={handleLogout}
-              title="Cerrar sesión"
-              className="p-1.5 text-white/30 hover:text-rose-300 hover:bg-rose-500/15 rounded-lg transition-colors"
-            >
-              <LogOut size={13} />
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
+          {!isCollapsed && (
+            <div className="min-w-0">
+              <p className="text-white font-bold text-sm leading-none">Fichaje App</p>
+              <p className="text-xs mt-0.5 truncate" style={{ color: S.GROUP }}>
+                {user.company?.name ?? 'Panel Admin'}
+              </p>
+            </div>
+          )}
+        </div>
 
-  /* ── Root layout ───────────────────────────────────────────── */
+        {/* Nav */}
+        <nav className="flex-1 px-2 py-4 space-y-5 overflow-y-auto sidebar-scroll">
+          {NAV_GROUPS.map((group) => {
+            const visible = group.items.filter(
+              item => !item.roles || item.roles.includes(user.role),
+            );
+            if (visible.length === 0) return null;
+            return (
+              <div key={group.key}>
+                {!isCollapsed ? (
+                  <p
+                    className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest"
+                    style={{ color: S.GROUP }}
+                  >
+                    {group.label}
+                  </p>
+                ) : (
+                  <div className="mb-2 mx-1" style={{ borderTop: `1px solid ${S.BORDER}` }} />
+                )}
+                <ul className="space-y-0.5">
+                  {visible.map(item => (
+                    <li key={item.href}>
+                      <NavItem
+                        href={item.href}
+                        label={t(item.labelKey as any)}
+                        Icon={item.icon}
+                        isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
+                        collapsed={isCollapsed}
+                        onClick={() => setMobileOpen(false)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* Collapse button — desktop only */}
+        {!mobile && (
+          <CollapseBtn collapsed={collapsed} onToggle={toggleCollapsed} />
+        )}
+
+        {/* User strip */}
+        <div
+          className="flex-shrink-0 px-2 py-2"
+          style={{ borderTop: `1px solid ${S.BORDER}` }}
+        >
+          {!isCollapsed ? (
+            <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs text-white flex-shrink-0"
+                style={{ background: S.AVATAR_BG }}
+              >
+                {getInitials(user.firstName, user.lastName)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-white truncate leading-none">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="text-[10px] mt-0.5" style={{ color: S.GROUP }}>
+                  {t(`roles.${user.role}` as any) ?? user.role}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowChangePwd(true)}
+                className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                style={{ color: S.INACTIVE }}
+                title="Cambiar contraseña"
+              >
+                <Lock style={{ width: 13, height: 13 }} />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="p-1.5 rounded-lg transition-colors hover:bg-red-500/15 hover:text-red-300"
+                style={{ color: S.INACTIVE }}
+                title="Cerrar sesión"
+              >
+                <LogOut style={{ width: 13, height: 13 }} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-1">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center font-semibold text-[11px] text-white"
+                style={{ background: S.AVATAR_BG }}
+              >
+                {getInitials(user.firstName, user.lastName)}
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-1.5 rounded-lg hover:bg-red-500/15"
+                style={{ color: S.INACTIVE }}
+              >
+                <LogOut style={{ width: 13, height: 13 }} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  /* ── Root ───────────────────────────────────────────────────── */
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out">
-        <SidebarContent />
+        <SidebarInner />
       </aside>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute left-0 top-0 bottom-0 w-[220px] shadow-2xl">
-            <SidebarContent mobile />
+          <aside className="absolute left-0 top-0 bottom-0 shadow-2xl">
+            <SidebarInner mobile />
           </aside>
         </div>
       )}
 
-      {/* Content area */}
+      {/* Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* Top bar */}
-        <header className="h-14 bg-white border-b border-slate-100 flex items-center px-4 lg:px-6 gap-4 flex-shrink-0 shadow-sm">
+        {/* Topbar */}
+        <header className="h-14 bg-white border-b border-gray-200 flex items-center px-4 sm:px-6 gap-3 flex-shrink-0">
 
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(true)}
-            className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            className="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
           >
-            <Menu size={20} className="text-slate-600" />
+            <Menu className="w-5 h-5" />
           </button>
 
-          {/* Breadcrumb / page title */}
-          <div className="flex items-center gap-2 text-sm min-w-0">
-            <span className="text-slate-400 hidden sm:block">Panel</span>
-            {activePage && (
-              <>
-                <ChevronRight size={14} className="text-slate-300 hidden sm:block flex-shrink-0" />
-                <span className="font-semibold text-[#0f2744] truncate">
-                  {t(activePage.labelKey as any)}
-                </span>
-              </>
+          {/* Title / breadcrumb */}
+          <div className="flex items-center gap-2 text-sm flex-1 min-w-0">
+            {activePage ? (
+              <span className="font-semibold text-gray-900 truncate">
+                {t(activePage.labelKey as any)}
+              </span>
+            ) : (
+              <span className="font-semibold text-gray-900">Panel Admin</span>
             )}
           </div>
 
-          {/* Right side */}
-          <div className="ml-auto flex items-center gap-2">
-            {/* Language switcher */}
+          {/* Right */}
+          <div className="flex items-center gap-1.5">
             <div className="hidden sm:block">
               <LanguageSwitcher />
             </div>
 
-            {/* Notification bell */}
-            <button className="relative p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-500 hover:text-slate-700">
-              <Bell size={18} />
-              {/* Badge */}
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#1aad8d] rounded-full ring-2 ring-white" />
+            {/* Bell */}
+            <button className="relative p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" />
             </button>
 
             {/* Divider */}
-            <div className="w-px h-8 bg-slate-100 mx-1" />
+            <div className="h-8 w-px bg-gray-200 mx-1" />
 
-            {/* User info */}
+            {/* User */}
             <button
               onClick={() => setShowChangePwd(true)}
-              className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-slate-50 transition-colors group"
+              className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <UserAvatar firstName={user.firstName} lastName={user.lastName} size="md" />
+              <TopbarAvatar firstName={user.firstName} lastName={user.lastName} />
               <div className="hidden sm:flex flex-col items-start min-w-0">
-                <span className="text-xs font-semibold text-[#0f2744] leading-none truncate max-w-[140px]">
+                <span className="text-sm font-semibold text-gray-900 leading-none truncate max-w-[160px]">
                   {user.firstName} {user.lastName}
                 </span>
-                <span className="text-[10px] text-slate-400 mt-0.5">
+                <span className="text-xs text-gray-400 mt-0.5">
                   {t(`roles.${user.role}` as any) ?? user.role}
                 </span>
               </div>
-              <ChevronRight size={13} className="text-slate-300 hidden sm:block group-hover:text-slate-500 transition-colors" />
             </button>
 
             {/* Logout */}
             <button
               onClick={handleLogout}
               title="Cerrar sesión"
-              className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+              className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
             >
-              <LogOut size={16} />
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-slate-50">
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
+        <main className="flex-1 overflow-y-auto scrollbar-thin">
+          <div className="p-4 sm:p-6 animate-fade-in">
             {children}
           </div>
         </main>
       </div>
 
       {showChangePwd && <ChangePasswordModal onClose={() => setShowChangePwd(false)} />}
+    </div>
+  );
+}
+
+/* ─── Collapse button component ───────────────────────────────── */
+function CollapseBtn({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div style={{ borderTop: `1px solid rgba(255,255,255,0.08)` }}>
+      <button
+        onClick={onToggle}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className={clsx(
+          'hidden lg:flex items-center gap-2 w-full px-4 py-3 text-sm transition-colors duration-150',
+          collapsed ? 'justify-center' : '',
+        )}
+        style={{ color: hovered ? '#ffffff' : '#8ba8c0' }}
+      >
+        {collapsed
+          ? <ChevronRightIcon style={{ width: 16, height: 16 }} />
+          : (
+            <>
+              <ChevronLeft style={{ width: 16, height: 16 }} />
+              <span>Colapsar</span>
+            </>
+          )
+        }
+      </button>
     </div>
   );
 }

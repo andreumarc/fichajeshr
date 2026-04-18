@@ -3,13 +3,17 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/shared/Providers';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Fichaje App - Control Horario',
   description: 'Plataforma profesional de fichaje laboral con geolocalización',
   manifest: '/manifest.json',
-  themeColor: '#2563eb',
+  themeColor: '#003A70',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
