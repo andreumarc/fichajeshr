@@ -15,6 +15,17 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuditAction } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
+interface HubTokenPayload {
+  sub: string;
+  email: string;
+  name: string;
+  hub_role: string;
+  app_role: string;
+  app_id: string;
+  company_id: string | null;
+  iss: string;
+}
+
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MINUTES = 15;
 
@@ -197,6 +208,99 @@ export class AuthService {
     ]);
 
     return { accessToken, refreshToken };
+  }
+
+  // ── Hub SSO ───────────────────────────────────────────────────
+  async hubSsoLogin(hubToken: string, meta: { ip: string; userAgent: string }) {
+    // 1. Verify the hub JWT
+    const hubSecret = this.config.get<string>('HUB_JWT_SECRET') ?? this.config.get<string>('JWT_SECRET');
+    let payload: HubTokenPayload;
+    try {
+      payload = this.jwtService.verify<HubTokenPayload>(hubToken, {
+        secret: hubSecret,
+        issuer: 'impulsodent-hub',
+      });
+    } catch {
+      throw new UnauthorizedException('Token SSO inválido o expirado');
+    }
+
+    const email = payload.email.toLowerCase().trim();
+
+    // 2. Map hub role to app UserRole
+    const roleMap: Record<string, string> = {
+      SUPERADMIN: 'SUPERADMIN',
+      COMPANY_ADMIN: 'COMPANY_ADMIN',
+      ADMIN: 'COMPANY_ADMIN',
+      HR: 'HR',
+      MANAGER: 'MANAGER',
+      EMPLOYEE: 'EMPLOYEE',
+      DEMO: 'DEMO',
+    };
+    const appRole = (roleMap[payload.app_role?.toUpperCase()] ?? 'EMPLOYEE') as any;
+
+    // 3. Upsert user
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { company: true, employee: { include: { workCenter: true } } },
+    });
+
+    if (!user) {
+      const nameParts = (payload.name ?? '').split(' ');
+      const created = await this.prisma.user.create({
+        data: {
+          email,
+          firstName: nameParts[0] ?? email,
+          lastName: nameParts.slice(1).join(' ') || '',
+          passwordHash: await bcrypt.hash(require('crypto').randomBytes(32).toString('hex'), 12),
+          role: appRole,
+          companyId: payload.company_id ?? null,
+          isActive: true,
+        },
+      });
+      user = await this.prisma.user.findUnique({
+        where: { id: created.id },
+        include: { company: true, employee: { include: { workCenter: true } } },
+      }) as any;
+    }
+
+    const tokens = await this.generateTokens(user!);
+
+    // 4. Save session
+    await this.prisma.userSession.create({
+      data: {
+        userId: user!.id,
+        refreshToken: tokens.refreshToken,
+        ipAddress: meta.ip,
+        userAgent: meta.userAgent,
+        expiresAt: new Date(
+          Date.now() + this.parseExpiry(this.config.get('JWT_REFRESH_EXPIRES_IN', '7d')),
+        ),
+      },
+    });
+
+    // 5. Update last login
+    await this.prisma.user.update({
+      where: { id: user!.id },
+      data: { loginAttempts: 0, lockedUntil: null, lastLogin: new Date() },
+    });
+
+    await this.auditService.log({
+      action: AuditAction.LOGIN,
+      entityType: 'User',
+      entityId: user!.id,
+      userId: user!.id,
+      companyId: user!.companyId ?? undefined,
+      ipAddress: meta.ip,
+      userAgent: meta.userAgent,
+      description: 'User logged in via Hub SSO',
+    });
+
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: this.sanitizeUser(user!),
+      mustChangePassword: user!.mustChangePassword,
+    };
   }
 
   async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {

@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Get,
   Patch,
+  Query,
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -97,5 +98,19 @@ export class AuthController {
       throw new BadRequestException('Mínimo 8 caracteres');
     }
     await this.authService.setPassword(user.id, dto.newPassword);
+  }
+
+  @Get('hub-sso')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'SSO desde ImpulsoDent Hub — intercambia hub_token por tokens de sesión' })
+  async hubSso(
+    @Query('hub_token') hubToken: string,
+    @Req() req: Request,
+  ) {
+    if (!hubToken) throw new BadRequestException('hub_token requerido');
+    return this.authService.hubSsoLogin(hubToken, {
+      ip: (req as any).ip ?? 'unknown',
+      userAgent: (req as any).headers['user-agent'] ?? 'unknown',
+    });
   }
 }
