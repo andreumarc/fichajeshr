@@ -220,11 +220,6 @@ export default function LoginPage() {
             <p className="text-xs font-bold text-gray-600 mb-2">Credenciales de demostración:</p>
             <div className="space-y-1 text-xs text-gray-500">
               <p>
-                <span className="text-gray-600">Admin: </span>
-                <span className="font-medium" style={{ color: ACCENT }}>superadmin@fichajeshr.app</span>
-                <span className="text-gray-600"> / SuperAdmin123!</span>
-              </p>
-              <p>
                 <span className="text-gray-600">Empresa: </span>
                 <span className="font-medium" style={{ color: ACCENT }}>admin@techcorp.es</span>
                 <span className="text-gray-600"> / Admin123!</span>
@@ -232,6 +227,11 @@ export default function LoginPage() {
               <p>
                 <span className="text-gray-600">RRHH: </span>
                 <span className="font-medium" style={{ color: ACCENT }}>rrhh@techcorp.es</span>
+                <span className="text-gray-600"> / Admin123!</span>
+              </p>
+              <p>
+                <span className="text-gray-600">Empleado: </span>
+                <span className="font-medium" style={{ color: ACCENT }}>ana.garcia@techcorp.es</span>
                 <span className="text-gray-600"> / Admin123!</span>
               </p>
             </div>
