@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, History, AlertCircle, LogOut, Calendar, CalendarOff, Lock } from 'lucide-react';
+import { LayoutDashboard, History, AlertCircle, LogOut, Calendar, CalendarOff, Lock, LayoutGrid } from 'lucide-react';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
 import { useState, useEffect } from 'react';
@@ -51,10 +51,22 @@ export default function EmployeeLayout({ children }: { children: React.ReactNode
                 {user.firstName} {user.lastName}
               </p>
               <p className="text-xs text-brand-200 mt-0.5">
-                {user.employee?.workCenter?.name ?? user.company?.name ?? 'Empleado'}
+                {user.employee?.workCenter?.name ?? user.company?.name ?? ({
+                  SUPERADMIN: 'Super Admin', COMPANY_ADMIN: 'Admin', HR: 'RRHH',
+                  MANAGER: 'Manager', EMPLOYEE: 'Empleado', KIOSK: 'Kiosco',
+                } as Record<string, string>)[user.role] ?? 'Empleado'}
               </p>
             </div>
           </div>
+          <a
+            href="https://app.impulsodent.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-brand-200 hover:text-white text-xs px-2.5 py-1.5 hover:bg-white/10 rounded-lg transition-colors"
+            title="ImpulsoDent Hub"
+          >
+            <LayoutGrid size={15} />
+          </a>
           <button
             onClick={() => setShowChangePwd(true)}
             className="flex items-center gap-1.5 text-brand-200 hover:text-white text-xs px-2.5 py-1.5 hover:bg-white/10 rounded-lg transition-colors"
