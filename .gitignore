@@ -52,3 +52,5 @@ apps/backend/node_modules/
 # ── Misc ──────────────────────────────────────────────────────
 *.tsbuildinfo
 .eslintcache
+
+.vercel

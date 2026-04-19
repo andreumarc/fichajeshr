@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Clock, Building2, BarChart3, FileText,
   Settings, LogOut, ShieldCheck, ChevronRight, MessageSquare,
   CalendarDays, CalendarOff, Lock, Bell, Menu,
-  ChevronLeft, ChevronRight as ChevronRightIcon,
+  ChevronLeft, ChevronRight as ChevronRightIcon, LayoutGrid, ExternalLink,
 } from 'lucide-react';
 import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
 import { useState, useEffect } from 'react';
@@ -219,6 +219,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
         </nav>
+
+        {/* ImpulsoDent Hub */}
+        <div className="px-2 py-2" style={{ borderTop: `1px solid ${S.BORDER}` }}>
+          <a
+            href="https://app.impulsodent.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={clsx(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+              isCollapsed && 'justify-center',
+            )}
+            style={{ background: 'rgba(13,148,136,0.12)', color: '#0d9488' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(13,148,136,0.25)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(13,148,136,0.12)'; }}
+            title={isCollapsed ? 'ImpulsoDent Hub' : undefined}
+          >
+            <LayoutGrid style={{ width: 18, height: 18, flexShrink: 0 }} />
+            {!isCollapsed && (
+              <>
+                <span className="truncate flex-1">ImpulsoDent Hub</span>
+                <ExternalLink style={{ width: 14, height: 14, opacity: 0.6 }} />
+              </>
+            )}
+          </a>
+        </div>
 
         {/* Collapse button — desktop only */}
         {!mobile && (

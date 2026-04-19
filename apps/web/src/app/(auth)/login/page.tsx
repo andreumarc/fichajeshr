@@ -142,9 +142,9 @@ export default function LoginPage() {
           </div>
 
           {/* Heading */}
-          <div className="mb-7">
+          <div className="mb-8">
             <h1 className="text-2xl font-bold" style={{ color: BRAND }}>Acceso al sistema</h1>
-            <p className="text-gray-400 text-sm mt-1">Introduce tus credenciales para continuar</p>
+            <p className="text-gray-500 text-sm mt-1">Introduce tus credenciales para continuar</p>
           </div>
 
           {/* Error */}
@@ -156,7 +156,7 @@ export default function LoginPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
               <input
@@ -164,7 +164,7 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 placeholder="tu@email.com"
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-colors"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-colors"
               />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
             </div>
@@ -187,7 +187,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-colors pr-11"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-colors pr-11"
                 />
                 <button
                   type="button"
@@ -217,22 +217,12 @@ export default function LoginPage() {
 
           {/* Demo credentials */}
           <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-            <p className="text-xs font-bold text-gray-600 mb-2">Credenciales de demostración:</p>
+            <p className="text-xs font-semibold text-gray-600 mb-1.5">Credenciales de demostración:</p>
             <div className="space-y-1 text-xs text-gray-500">
               <p>
-                <span className="text-gray-600">Empresa: </span>
-                <span className="font-medium" style={{ color: ACCENT }}>admin@techcorp.es</span>
-                <span className="text-gray-600"> / Admin123!</span>
-              </p>
-              <p>
-                <span className="text-gray-600">RRHH: </span>
-                <span className="font-medium" style={{ color: ACCENT }}>rrhh@techcorp.es</span>
-                <span className="text-gray-600"> / Admin123!</span>
-              </p>
-              <p>
-                <span className="text-gray-600">Empleado: </span>
-                <span className="font-medium" style={{ color: ACCENT }}>ana.garcia@techcorp.es</span>
-                <span className="text-gray-600"> / Admin123!</span>
+                <span className="text-gray-600">Demo: </span>
+                <span className="font-medium" style={{ color: ACCENT }}>demo@impulsodent.com</span>
+                <span className="text-gray-600"> / Demo2026!</span>
               </p>
             </div>
           </div>

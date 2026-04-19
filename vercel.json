@@ -1,0 +1,9 @@
+{
+  "experimentalServices": {
+    "backend": {
+      "entrypoint": "apps/backend",
+      "routePrefix": "/",
+      "buildCommand": "npm install && npx prisma generate && npx @nestjs/cli build"
+    }
+  }
+}

@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Building2, Users, Clock, LogOut, Menu,
   ChevronRight, Lock, Bell, MapPin, ShieldCheck, Settings2,
   ChevronLeft, ChevronRight as ChevronRightIcon, UserCog,
+  LayoutGrid, ExternalLink,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
@@ -229,6 +230,31 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         </nav>
 
         {!mobile && <CollapseBtn collapsed={collapsed} onToggle={toggleCollapsed} />}
+
+        {/* ImpulsoDent Hub */}
+        <div className="px-2 py-2" style={{ borderTop: `1px solid ${S.BORDER}` }}>
+          <a
+            href="https://app.impulsodent.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={clsx(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+              isColl && 'justify-center',
+            )}
+            style={{ background: 'rgba(13,148,136,0.12)', color: '#0d9488' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(13,148,136,0.25)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(13,148,136,0.12)'; }}
+            title={isColl ? 'ImpulsoDent Hub' : undefined}
+          >
+            <LayoutGrid style={{ width: 18, height: 18, flexShrink: 0 }} />
+            {!isColl && (
+              <>
+                <span className="truncate flex-1">ImpulsoDent Hub</span>
+                <ExternalLink style={{ width: 14, height: 14, opacity: 0.6 }} />
+              </>
+            )}
+          </a>
+        </div>
 
         {/* User strip */}
         <div

@@ -3,8 +3,6 @@
 import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
-
 function SsoExchange() {
   const router    = useRouter()
   const params    = useSearchParams()
@@ -16,7 +14,7 @@ function SsoExchange() {
     async function exchange() {
       try {
         const res = await fetch(
-          `${API_URL}/api/v1/auth/hub-sso?hub_token=${encodeURIComponent(hubToken!)}`,
+          `/api/v1/auth/hub-sso?hub_token=${encodeURIComponent(hubToken!)}`,
           { credentials: 'include' }
         )
         if (!res.ok) throw new Error('sso_failed')
