@@ -36,16 +36,19 @@ async function main() {
   const demoPasswordHash = await bcrypt.hash('Demo2026!', 12);
 
   // ---- SUPERADMIN ----
+  const superadminEmail    = process.env.SUPERADMIN_EMAIL    ?? 'superadmin@fichajeshr.app';
+  const superadminPassword = process.env.SUPERADMIN_PASSWORD ?? 'FichajeHR2026!';
   await prisma.user.create({
     data: {
-      email: 'marcandreueguerao@gmail.com',
-      passwordHash: await bcrypt.hash('Admin1234!', 12),
+      email: superadminEmail,
+      passwordHash: await bcrypt.hash(superadminPassword, 12),
       firstName: 'Super',
       lastName: 'Admin',
       role: UserRole.SUPERADMIN,
       isActive: true,
     },
   });
+  console.log(`✅ Superadmin created: ${superadminEmail}`);
 
   // ---- COMPANY 1: TechCorp ----
   const company1 = await prisma.company.create({
@@ -278,7 +281,7 @@ async function main() {
       passwordHash: demoPasswordHash,
       firstName: 'Demo',
       lastName: 'ImpulsoDent',
-      role: UserRole.DEMO,
+      role: UserRole.EMPLOYEE,
       isActive: true,
     },
   });
