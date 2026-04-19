@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /* ─── Rutas públicas (sin autenticación) ───────────────────────── */
-const PUBLIC_PATHS = ['/login', '/kiosk', '/api/v1/health', '/api/v1/kiosk'];
+const PUBLIC_PATHS = ['/login', '/sso', '/kiosk', '/api/v1/health', '/api/v1/kiosk', '/api/v1/auth/hub-sso'];
 
 /* ─── Redirección por rol ──────────────────────────────────────── */
 const ROLE_HOME: Record<string, string> = {
