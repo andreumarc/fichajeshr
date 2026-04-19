@@ -3,18 +3,15 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Building2, Users, Clock, LogOut, Menu,
-  ChevronRight, Shield, Lock, Bell,
-  ChevronLeft, ChevronRight as ChevronRightIcon,
+  ChevronRight, Lock, Bell, MapPin, ShieldCheck, Settings2,
+  ChevronLeft, ChevronRight as ChevronRightIcon, UserCog,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
 import clsx from 'clsx';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
-import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
-import '@/lib/i18n';
 
 /* ─── ImpulsoDent Design System — Sidebar tokens ─────────────── */
 const S = {
@@ -48,13 +45,23 @@ function TopbarAvatar({ firstName = '', lastName = '' }: { firstName?: string; l
 /* ─── nav ─────────────────────────────────────────────────────── */
 const NAV_GROUPS = [
   {
-    key: 'platform',
-    label: 'PLATAFORMA',
+    key: 'administracion',
+    label: 'ADMINISTRACIÓN',
     items: [
-      { href: '/superadmin/dashboard',    labelKey: 'superadmin.nav.dashboard',   icon: LayoutDashboard },
-      { href: '/superadmin/companies',    labelKey: 'superadmin.nav.companies',    icon: Building2 },
-      { href: '/superadmin/employees',    labelKey: 'superadmin.nav.employees',    icon: Users },
-      { href: '/superadmin/time-entries', labelKey: 'superadmin.nav.timeEntries', icon: Clock },
+      { href: '/superadmin/dashboard',    label: 'Dashboard',          icon: LayoutDashboard },
+      { href: '/superadmin/companies',    label: 'Empresas',           icon: Building2 },
+      { href: '/superadmin/work-centers', label: 'Centros de trabajo', icon: MapPin },
+      { href: '/superadmin/employees',    label: 'Empleados',          icon: Users },
+      { href: '/superadmin/time-entries', label: 'Fichajes',           icon: Clock },
+    ],
+  },
+  {
+    key: 'sistema',
+    label: 'SISTEMA',
+    items: [
+      { href: '/superadmin/users',    label: 'Usuarios',      icon: UserCog },
+      { href: '/superadmin/audit',    label: 'Auditoría',     icon: ShieldCheck },
+      { href: '/superadmin/settings', label: 'Configuración', icon: Settings2 },
     ],
   },
 ];
@@ -127,7 +134,6 @@ function CollapseBtn({ collapsed, onToggle }: { collapsed: boolean; onToggle: ()
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router   = useRouter();
-  const { t }    = useTranslation();
 
   const [collapsed,     setCollapsed]     = useState(false);
   const [mobileOpen,    setMobileOpen]    = useState(false);
@@ -209,7 +215,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                   <li key={item.href}>
                     <NavItem
                       href={item.href}
-                      label={t(item.labelKey as any)}
+                      label={item.label}
                       Icon={item.icon}
                       isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
                       collapsed={isColl}
@@ -241,9 +247,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 <p className="text-xs font-semibold text-white truncate leading-none">
                   {user.firstName} {user.lastName}
                 </p>
-                <p className="text-[10px] mt-0.5" style={{ color: S.GROUP }}>
-                  {t('roles.SUPERADMIN')}
-                </p>
+                <p className="text-[10px] mt-0.5" style={{ color: S.GROUP }}>Super Admin</p>
               </div>
               <button
                 onClick={() => setShowChangePwd(true)}
@@ -320,20 +324,12 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
           </button>
 
           <div className="flex items-center gap-2 text-sm flex-1 min-w-0">
-            {activePage ? (
-              <span className="font-semibold text-gray-900 truncate">
-                {t(activePage.labelKey as any)}
-              </span>
-            ) : (
-              <span className="font-semibold text-gray-900">Superadmin</span>
-            )}
+            <span className="font-semibold text-gray-900 truncate">
+              {activePage?.label ?? 'Superadmin'}
+            </span>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <div className="hidden sm:block">
-              <LanguageSwitcher />
-            </div>
-
             <button className="relative p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
               <Bell className="w-5 h-5" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" />
@@ -350,7 +346,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 <span className="text-sm font-semibold text-gray-900 leading-none truncate max-w-[160px]">
                   {user.firstName} {user.lastName}
                 </span>
-                <span className="text-xs text-gray-400 mt-0.5">{t('roles.SUPERADMIN')}</span>
+                <span className="text-xs text-gray-400 mt-0.5">Super Admin</span>
               </div>
             </button>
 

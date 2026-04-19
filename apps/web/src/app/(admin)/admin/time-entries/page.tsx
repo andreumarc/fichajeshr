@@ -4,8 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import dayjs from 'dayjs';
 import { Filter, Download, MapPin, MapPinOff, Edit2, Trash2, Loader2 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import '@/lib/i18n';
 
 const typeLabels: Record<string, string> = {
   CHECK_IN: 'Entrada',
@@ -26,7 +24,6 @@ const statusBadge: Record<string, string> = {
 };
 
 export default function TimeEntriesPage() {
-  const { t } = useTranslation();
   const qc = useQueryClient();
   const [filters, setFilters] = useState({
     from: dayjs().format('YYYY-MM-DD'),
@@ -78,12 +75,12 @@ export default function TimeEntriesPage() {
   };
 
   const columnHeaders = [
-    t('timeEntries.employee'),
-    t('timeEntries.type'),
-    t('timeEntries.date'),
-    t('timeEntries.workCenter'),
+    'Empleado',
+    'Tipo',
+    'Fecha',
+    'Centro de trabajo',
     'Estado',
-    t('timeEntries.location'),
+    'Ubicación',
     'Método',
     '',
   ];
@@ -91,9 +88,9 @@ export default function TimeEntriesPage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">{t('timeEntries.title')}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Fichajes</h1>
         <button onClick={handleExport} className="btn-secondary text-sm gap-2">
-          <Download size={16} /> {t('common.export')}
+          <Download size={16} /> Exportar
         </button>
       </div>
 
@@ -101,7 +98,7 @@ export default function TimeEntriesPage() {
       <div className="card">
         <div className="flex flex-wrap gap-4 items-end">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">{t('timeEntries.from')}</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Desde</label>
             <input
               type="date"
               value={filters.from}
@@ -110,7 +107,7 @@ export default function TimeEntriesPage() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">{t('timeEntries.to')}</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Hasta</label>
             <input
               type="date"
               value={filters.to}
@@ -119,7 +116,7 @@ export default function TimeEntriesPage() {
             />
           </div>
           <button onClick={() => refetch()} className="btn-primary text-sm px-4 py-2">
-            <Filter size={14} /> {t('common.filter')}
+            <Filter size={14} /> Filtrar
           </button>
         </div>
       </div>
@@ -150,9 +147,9 @@ export default function TimeEntriesPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
-                <tr><td colSpan={9} className="text-center py-12 text-gray-400">{t('common.loading')}</td></tr>
+                <tr><td colSpan={9} className="text-center py-12 text-gray-400">Cargando...</td></tr>
               ) : data?.data?.length === 0 ? (
-                <tr><td colSpan={9} className="text-center py-12 text-gray-400">{t('timeEntries.noEntries')}</td></tr>
+                <tr><td colSpan={9} className="text-center py-12 text-gray-400">No hay fichajes para este período</td></tr>
               ) : (
                 data?.data?.map((entry: any) => (
                   <tr key={entry.id} className="hover:bg-gray-50 transition-colors">
@@ -189,17 +186,17 @@ export default function TimeEntriesPage() {
                         {entry.status}
                       </span>
                       {entry.isManual && (
-                        <span className="badge-blue ml-1">{t('timeEntries.manual')}</span>
+                        <span className="badge-blue ml-1">Manual</span>
                       )}
                     </td>
                     <td className="py-3 px-4">
                       {entry.latitude ? (
                         <span className={`flex items-center gap-1 text-xs ${entry.isWithinZone ? 'text-green-600' : 'text-amber-600'}`}>
                           {entry.isWithinZone ? <MapPin size={12} /> : <MapPinOff size={12} />}
-                          {entry.isWithinZone ? t('timeEntries.inZone') : `${entry.distanceToCenter}m`}
+                          {entry.isWithinZone ? 'En zona' : `${entry.distanceToCenter}m`}
                         </span>
                       ) : (
-                        <span className="text-gray-300 text-xs">{t('timeEntries.noGps')}</span>
+                        <span className="text-gray-300 text-xs">Sin GPS</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-xs text-gray-400">{entry.clockMethod}</td>
@@ -219,7 +216,7 @@ export default function TimeEntriesPage() {
         {data && data.total > data.limit && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
             <p className="text-sm text-gray-500">
-              {t('timeEntries.totalRecords', { count: data.total })}
+              {data.total} registros en total
             </p>
             <div className="flex gap-2">
               <button
@@ -227,17 +224,17 @@ export default function TimeEntriesPage() {
                 disabled={filters.page === 1}
                 className="btn-secondary text-sm px-3 py-1.5 disabled:opacity-50"
               >
-                {t('common.previous')}
+                Anterior
               </button>
               <span className="flex items-center text-sm text-gray-500">
-                {t('timeEntries.page', { page: filters.page, total: Math.ceil(data.total / data.limit) })}
+                Página {filters.page} de {Math.ceil(data.total / data.limit)}
               </span>
               <button
                 onClick={() => { setFilters((f) => ({ ...f, page: f.page + 1 })); setSelected(new Set()); }}
                 disabled={filters.page >= Math.ceil(data.total / data.limit)}
                 className="btn-secondary text-sm px-3 py-1.5 disabled:opacity-50"
               >
-                {t('common.next')}
+                Siguiente
               </button>
             </div>
           </div>
@@ -248,14 +245,14 @@ export default function TimeEntriesPage() {
       {selected.size > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 bg-brand-800 text-white px-5 py-3 rounded-2xl shadow-2xl shadow-brand-900/40">
           <span className="text-sm font-semibold">
-            {selected.size} {selected.size !== 1 ? t('common.selectedPlural') : t('common.selected')}
+            {selected.size} {selected.size !== 1 ? 'seleccionados' : 'seleccionado'}
           </span>
           <div className="w-px h-5 bg-white/20" />
           <button
             onClick={() => setSelected(new Set())}
             className="text-sm text-white/70 hover:text-white transition-colors"
           >
-            {t('common.deselectAll')}
+            Deseleccionar todo
           </button>
           <button
             onClick={handleBulkDelete}
@@ -263,8 +260,8 @@ export default function TimeEntriesPage() {
             className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-1.5 rounded-xl transition-colors disabled:opacity-60"
           >
             {bulkDeleting
-              ? <><Loader2 size={13} className="animate-spin" />{t('common.loading')}</>
-              : <><Trash2 size={13} />{t('common.delete')} {selected.size}</>
+              ? <><Loader2 size={13} className="animate-spin" />Cargando...</>
+              : <><Trash2 size={13} />Eliminar {selected.size}</>
             }
           </button>
         </div>

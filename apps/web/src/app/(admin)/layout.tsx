@@ -9,13 +9,19 @@ import {
 } from 'lucide-react';
 import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
-import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
 import clsx from 'clsx';
-import '@/lib/i18n';
+
+const ROLE_LABELS: Record<string, string> = {
+  COMPANY_ADMIN: 'Admin empresa',
+  HR:            'RRHH',
+  MANAGER:       'Manager',
+  EMPLOYEE:      'Empleado',
+  KIOSK:         'Kiosco',
+  SUPERADMIN:    'Super Admin',
+};
 
 /* ─── ImpulsoDent Design System — Sidebar tokens ─────────────── */
 const S = {
@@ -52,29 +58,29 @@ const NAV_GROUPS = [
     key: 'principal',
     label: 'PRINCIPAL',
     items: [
-      { href: '/admin/dashboard',    labelKey: 'nav.dashboard',     icon: LayoutDashboard, roles: undefined },
-      { href: '/admin/time-entries', labelKey: 'nav.timeEntries',   icon: Clock,           roles: undefined },
-      { href: '/admin/schedules',    labelKey: 'nav.schedules',     icon: CalendarDays,    roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
+      { href: '/admin/dashboard',    label: 'Dashboard',           icon: LayoutDashboard, roles: undefined },
+      { href: '/admin/time-entries', label: 'Fichajes',             icon: Clock,           roles: undefined },
+      { href: '/admin/schedules',    label: 'Horarios',             icon: CalendarDays,    roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
     ],
   },
   {
     key: 'admin',
     label: 'ADMINISTRACIÓN',
     items: [
-      { href: '/admin/employees',      labelKey: 'nav.employees',     icon: Users,         roles: undefined },
-      { href: '/admin/work-centers',   labelKey: 'nav.workCenters',   icon: Building2,     roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
-      { href: '/admin/leave-requests', labelKey: 'nav.leaveRequests', icon: CalendarOff,   roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
-      { href: '/admin/incidents',      labelKey: 'nav.incidents',     icon: FileText,      roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
-      { href: '/admin/reports',        labelKey: 'nav.reports',       icon: BarChart3,     roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
-      { href: '/admin/whatsapp',       labelKey: 'nav.whatsapp',      icon: MessageSquare, roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/employees',      label: 'Empleados',           icon: Users,         roles: undefined },
+      { href: '/admin/work-centers',   label: 'Centros de trabajo',  icon: Building2,     roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
+      { href: '/admin/leave-requests', label: 'Ausencias',           icon: CalendarOff,   roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
+      { href: '/admin/incidents',      label: 'Incidencias',         icon: FileText,      roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/reports',        label: 'Informes',            icon: BarChart3,     roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/whatsapp',       label: 'WhatsApp',            icon: MessageSquare, roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
     ],
   },
   {
     key: 'system',
     label: 'SISTEMA',
     items: [
-      { href: '/admin/audit',    labelKey: 'nav.audit',    icon: ShieldCheck, roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
-      { href: '/admin/settings', labelKey: 'nav.settings', icon: Settings,    roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/audit',    label: 'Auditoría',     icon: ShieldCheck, roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/settings', label: 'Configuración', icon: Settings,    roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
     ],
   },
 ];
@@ -119,7 +125,6 @@ function NavItem({
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router   = useRouter();
-  const { t }    = useTranslation();
 
   const [collapsed,     setCollapsed]     = useState(false);
   const [mobileOpen,    setMobileOpen]    = useState(false);
@@ -201,7 +206,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <li key={item.href}>
                       <NavItem
                         href={item.href}
-                        label={t(item.labelKey as any)}
+                        label={item.label}
                         Icon={item.icon}
                         isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
                         collapsed={isCollapsed}
@@ -238,7 +243,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {user.firstName} {user.lastName}
                 </p>
                 <p className="text-[10px] mt-0.5" style={{ color: S.GROUP }}>
-                  {t(`roles.${user.role}` as any) ?? user.role}
+                  {ROLE_LABELS[user.role] ?? user.role}
                 </p>
               </div>
               <button
@@ -318,21 +323,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Title / breadcrumb */}
           <div className="flex items-center gap-2 text-sm flex-1 min-w-0">
-            {activePage ? (
-              <span className="font-semibold text-gray-900 truncate">
-                {t(activePage.labelKey as any)}
-              </span>
-            ) : (
-              <span className="font-semibold text-gray-900">Panel Admin</span>
-            )}
+            <span className="font-semibold text-gray-900 truncate">
+              {activePage?.label ?? 'Panel Admin'}
+            </span>
           </div>
 
           {/* Right */}
           <div className="flex items-center gap-1.5">
-            <div className="hidden sm:block">
-              <LanguageSwitcher />
-            </div>
-
             {/* Bell */}
             <button className="relative p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
               <Bell className="w-5 h-5" />
@@ -353,7 +350,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {user.firstName} {user.lastName}
                 </span>
                 <span className="text-xs text-gray-400 mt-0.5">
-                  {t(`roles.${user.role}` as any) ?? user.role}
+                  {ROLE_LABELS[user.role] ?? user.role}
                 </span>
               </div>
             </button>

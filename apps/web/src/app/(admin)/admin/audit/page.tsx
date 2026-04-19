@@ -4,8 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import dayjs from 'dayjs';
 import { ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import '@/lib/i18n';
 
 const ACTION_BADGE: Record<string, string> = {
   LOGIN: 'badge-green',
@@ -36,7 +34,6 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 export default function AuditPage() {
-  const { t } = useTranslation();
   const [filters, setFilters] = useState({
     action: '',
     entityType: '',
@@ -63,12 +60,12 @@ export default function AuditPage() {
   const totalPages = data ? Math.ceil((data.total ?? 0) / filters.limit) : 1;
 
   const columnHeaders = [
-    t('timeEntries.date'),
-    t('audit.action'),
-    t('audit.entity'),
-    t('audit.user'),
+    'Fecha',
+    'Acción',
+    'Entidad',
+    'Usuario',
     'IP',
-    t('audit.details'),
+    'Detalles',
   ];
 
   return (
@@ -78,8 +75,8 @@ export default function AuditPage() {
           <ShieldCheck size={18} className="text-slate-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-slate-900">{t('audit.title')}</h1>
-          <p className="text-sm text-slate-500">{t('audit.subtitle')}</p>
+          <h1 className="text-xl font-bold text-slate-900">Auditoría</h1>
+          <p className="text-sm text-slate-500">Registro de actividad del sistema</p>
         </div>
       </div>
 
@@ -87,39 +84,39 @@ export default function AuditPage() {
       <div className="card">
         <div className="flex flex-wrap gap-3">
           <div>
-            <label className="label">{t('audit.action')}</label>
+            <label className="label">Acción</label>
             <select
               value={filters.action}
               onChange={(e) => setFilters((f) => ({ ...f, action: e.target.value, page: 1 }))}
               className="input text-sm"
             >
-              <option value="">{t('common.all')}</option>
+              <option value="">Todos</option>
               {Object.entries(ACTION_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="label">{t('audit.entity')}</label>
+            <label className="label">Entidad</label>
             <select
               value={filters.entityType}
               onChange={(e) => setFilters((f) => ({ ...f, entityType: e.target.value, page: 1 }))}
               className="input text-sm"
             >
-              <option value="">{t('common.all')}</option>
+              <option value="">Todos</option>
               {['TimeEntry', 'Employee', 'WorkCenter', 'User', 'Incident', 'Company'].map((e) => (
                 <option key={e} value={e}>{e}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="label">{t('timeEntries.from')}</label>
+            <label className="label">Desde</label>
             <input type="date" value={filters.from}
               onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value, page: 1 }))}
               className="input text-sm" />
           </div>
           <div>
-            <label className="label">{t('timeEntries.to')}</label>
+            <label className="label">Hasta</label>
             <input type="date" value={filters.to}
               onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value, page: 1 }))}
               className="input text-sm" />
@@ -141,12 +138,12 @@ export default function AuditPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400">{t('common.loading')}</td>
+                  <td colSpan={6} className="text-center py-12 text-slate-400">Cargando...</td>
                 </tr>
               ) : (data?.data?.length ?? 0) === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-slate-400">
-                    {t('audit.noLogs')}
+                    No hay registros de auditoría
                   </td>
                 </tr>
               ) : (
@@ -195,7 +192,7 @@ export default function AuditPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50">
             <p className="text-sm text-slate-500">
-              {t('audit.pageOf', { page: filters.page, total: totalPages, count: data?.total })}
+              Página {filters.page} de {totalPages} · {data?.total} registros
             </p>
             <div className="flex gap-2">
               <button
@@ -203,14 +200,14 @@ export default function AuditPage() {
                 disabled={filters.page === 1}
                 className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-40 gap-1"
               >
-                <ChevronLeft size={14} /> {t('common.previous')}
+                <ChevronLeft size={14} /> Anterior
               </button>
               <button
                 onClick={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
                 disabled={filters.page >= totalPages}
                 className="btn-secondary text-xs px-3 py-1.5 disabled:opacity-40 gap-1"
               >
-                {t('common.next')} <ChevronRight size={14} />
+                Siguiente <ChevronRight size={14} />
               </button>
             </div>
           </div>

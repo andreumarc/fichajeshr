@@ -8,13 +8,10 @@ import {
   Download, Calendar, BarChart3, Clock, Coffee,
   ChevronLeft, ChevronRight, TrendingUp, User,
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import '@/lib/i18n';
 
 dayjs.locale('es');
 
 export default function ReportsPage() {
-  const { t } = useTranslation();
   const now = dayjs();
   const [year, setYear]  = useState(now.year());
   const [month, setMonth] = useState(now.month() + 1);
@@ -80,7 +77,7 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">{t('reports.title')}</h1>
+          <h1 className="text-xl font-bold text-slate-900">Informes</h1>
           <p className="text-sm text-slate-500 mt-0.5 capitalize">{monthLabel}</p>
         </div>
         <button
@@ -89,7 +86,7 @@ export default function ReportsPage() {
           className="btn-secondary text-sm gap-2"
         >
           <Download size={15} className={exportLoading ? 'animate-pulse' : ''} />
-          {exportLoading ? t('reports.generating') : t('common.export')}
+          {exportLoading ? 'Generando...' : 'Exportar'}
         </button>
       </div>
 
@@ -116,7 +113,7 @@ export default function ReportsPage() {
               onChange={(e) => setSelectedEmp(e.target.value)}
               className="input text-sm"
             >
-              <option value="">{t('reports.allEmployees')}</option>
+              <option value="">Todos los empleados</option>
               {(employees ?? []).map((e: any) => (
                 <option key={e.id} value={e.id}>
                   {e.firstName} {e.lastName} ({e.employeeCode})
@@ -132,27 +129,27 @@ export default function ReportsPage() {
         <div className="grid grid-cols-3 gap-4">
           {[
             {
-              labelKey: 'reports.netHours',
+              label: 'Horas netas',
               value: `${(totals.worked / 60).toFixed(1)}h`,
               icon: Clock,
               color: 'from-indigo-500 to-indigo-700',
             },
             {
-              labelKey: 'reports.workDays',
+              label: 'Días trabajados',
               value: String(totals.days),
               icon: Calendar,
               color: 'from-emerald-500 to-emerald-700',
             },
             {
-              labelKey: 'reports.totalBreaks',
+              label: 'Total pausas',
               value: `${Math.round(totals.breaks / 60 * 10) / 10}h`,
               icon: Coffee,
               color: 'from-amber-500 to-orange-600',
             },
-          ].map(({ labelKey, value, icon: Icon, color }) => (
-            <div key={labelKey} className={`bg-gradient-to-br ${color} rounded-2xl p-4 text-white`}>
+          ].map(({ label, value, icon: Icon, color }) => (
+            <div key={label} className={`bg-gradient-to-br ${color} rounded-2xl p-4 text-white`}>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-medium text-white/70">{t(labelKey)}</p>
+                <p className="text-xs font-medium text-white/70">{label}</p>
                 <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
                   <Icon size={15} />
                 </div>
@@ -167,19 +164,19 @@ export default function ReportsPage() {
       <div className="card p-0 overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
           <BarChart3 size={16} className="text-slate-500" />
-          <h2 className="font-semibold text-slate-800 text-sm">{t('reports.breakdown')}</h2>
+          <h2 className="font-semibold text-slate-800 text-sm">Desglose por empleado</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="border-b border-slate-100">
                 {[
-                  t('timeEntries.employee'),
-                  t('reports.days'),
-                  t('reports.grossHours'),
-                  t('reports.totalBreaks'),
-                  t('reports.netHoursCol'),
-                  t('reports.avgPerDay'),
+                  'Empleado',
+                  'Días',
+                  'Horas brutas',
+                  'Total pausas',
+                  'Horas netas',
+                  'Media/día',
                 ].map((h) => (
                   <th key={h} className="table-header">{h}</th>
                 ))}
@@ -188,12 +185,12 @@ export default function ReportsPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400">{t('common.loading')}</td>
+                  <td colSpan={6} className="text-center py-12 text-slate-400">Cargando...</td>
                 </tr>
               ) : (report ?? []).length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-slate-400">
-                    {t('reports.noData')}
+                    Sin datos para este período
                   </td>
                 </tr>
               ) : (

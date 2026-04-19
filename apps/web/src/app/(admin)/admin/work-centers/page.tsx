@@ -1,14 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import Cookies from 'js-cookie';
 import {
   Plus, Building2, MapPin, Users, Edit2, ToggleLeft,
   ToggleRight, Loader2, X, Check, Trash2, Download,
 } from 'lucide-react';
-import '@/lib/i18n';
 
 interface WorkCenterForm {
   name: string;
@@ -30,7 +28,6 @@ const EMPTY_FORM: WorkCenterForm = {
 };
 
 export default function WorkCentersPage() {
-  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing]     = useState<any>(null);
   const [form, setForm]           = useState<WorkCenterForm>(EMPTY_FORM);
@@ -54,11 +51,11 @@ export default function WorkCentersPage() {
       const res = await api.get('/work-centers/export/excel', { responseType: 'blob' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(new Blob([res.data]));
-      link.download = t('workCenters.exportFile');
+      link.download = 'centros_trabajo.xlsx';
       link.click();
       URL.revokeObjectURL(link.href);
     } catch {
-      alert(t('common.exportError'));
+      alert('Error al exportar los datos');
     }
   };
 
@@ -76,7 +73,7 @@ export default function WorkCentersPage() {
       qc.invalidateQueries({ queryKey: ['work-centers'] });
       closeModal();
     },
-    onError: (err: any) => setFormError(err.response?.data?.message ?? t('workCenters.saveError')),
+    onError: (err: any) => setFormError(err.response?.data?.message ?? 'Error al guardar el centro de trabajo'),
   });
 
   const toggleMutation = useMutation({
@@ -113,8 +110,8 @@ export default function WorkCentersPage() {
 
   const handleBulkDelete = async () => {
     const msg = selected.size === 1
-      ? t('common.deleteConfirm', { count: selected.size })
-      : t('common.deleteConfirmPlural', { count: selected.size });
+      ? `¿Eliminar ${selected.size} centro de trabajo?`
+      : `¿Eliminar ${selected.size} centros de trabajo?`;
     if (!confirm(msg)) return;
     setBulkDeleting(true);
     try {
@@ -122,7 +119,7 @@ export default function WorkCentersPage() {
       setSelected(new Set());
       qc.invalidateQueries({ queryKey: ['work-centers'] });
     } catch (e) {
-      alert(t('common.deleteError'));
+      alert('Error al eliminar los elementos');
     } finally {
       setBulkDeleting(false);
     }
@@ -130,7 +127,7 @@ export default function WorkCentersPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim()) { setFormError(t('workCenters.nameRequired')); return; }
+    if (!form.name.trim()) { setFormError('El nombre es obligatorio'); return; }
     saveMutation.mutate({
       name: form.name,
       code: form.code || null,
@@ -150,13 +147,13 @@ export default function WorkCentersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">{t('workCenters.title')}</h1>
+          <h1 className="text-xl font-bold text-slate-900">Centros de trabajo</h1>
           {centers && (
             <p className="text-sm text-slate-500 mt-0.5">
               {centers.length === 1
-                ? t('workCenters.subtitleOne')
-                : t('workCenters.subtitle', { count: centers.length })}
-              {isReadOnly && <span className="ml-2 text-amber-600 font-medium">{t('workCenters.readOnly')}</span>}
+                ? '1 centro de trabajo'
+                : `${centers.length} centros de trabajo`}
+              {isReadOnly && <span className="ml-2 text-amber-600 font-medium">Solo lectura</span>}
             </p>
           )}
         </div>
@@ -164,13 +161,13 @@ export default function WorkCentersPage() {
           <button
             onClick={handleExport}
             className="btn-secondary text-sm gap-1.5"
-            title={t('common.export')}
+            title="Exportar"
           >
-            <Download size={14} /> {t('common.export')}
+            <Download size={14} /> Exportar
           </button>
           {!isReadOnly && (
             <button onClick={openCreate} className="btn-primary text-sm gap-1.5">
-              <Plus size={15} /> {t('workCenters.new')}
+              <Plus size={15} /> Nuevo centro
             </button>
           )}
         </div>
@@ -179,7 +176,7 @@ export default function WorkCentersPage() {
       {/* Grid */}
       {isLoading ? (
         <div className="card text-center py-16 text-slate-400">
-          <Loader2 className="animate-spin mx-auto mb-2" size={20} /> {t('common.loading')}
+          <Loader2 className="animate-spin mx-auto mb-2" size={20} /> Cargando...
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -245,7 +242,7 @@ export default function WorkCentersPage() {
                 )}
                 {center.latitude && (
                   <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <span className="font-medium">{t('workCenters.gps')}:</span>
+                    <span className="font-medium">GPS:</span>
                     {center.latitude.toFixed(6)}, {center.longitude?.toFixed(6)}
                     <span className="ml-auto text-indigo-600 font-medium">r={center.radiusMeters}m</span>
                   </div>
@@ -255,13 +252,13 @@ export default function WorkCentersPage() {
               <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-50">
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Users size={13} />
-                  <span>{t('workCenters.employees', { count: center._count?.employees ?? 0 })}</span>
+                  <span>{center._count?.employees ?? 0} empleados</span>
                 </div>
                 <div className="flex gap-1">
-                  {center.requireGps && <span className="badge-blue">{t('workCenters.gps')}</span>}
-                  {center.allowRemote && <span className="badge-purple">{t('workCenters.remote')}</span>}
+                  {center.requireGps && <span className="badge-blue">GPS</span>}
+                  {center.allowRemote && <span className="badge-purple">Remoto</span>}
                   <span className={center.isActive ? 'badge-green' : 'badge-gray'}>
-                    {center.isActive ? t('status.active') : t('status.inactive')}
+                    {center.isActive ? 'Activo' : 'Inactivo'}
                   </span>
                 </div>
               </div>
@@ -274,21 +271,21 @@ export default function WorkCentersPage() {
       {selected.size > 0 && !isReadOnly && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 bg-brand-800 text-white px-5 py-3 rounded-2xl shadow-2xl shadow-brand-900/40">
           <span className="text-sm font-semibold">
-            {selected.size} {selected.size === 1 ? t('common.selected') : t('common.selectedPlural')}
+            {selected.size} {selected.size === 1 ? 'seleccionado' : 'seleccionados'}
           </span>
           <div className="w-px h-5 bg-white/20" />
           <button
             onClick={() => setSelected(new Set())}
             className="text-sm text-white/70 hover:text-white transition-colors"
           >
-            {t('common.deselectAll')}
+            Deseleccionar todo
           </button>
           <button
             onClick={handleBulkDelete}
             disabled={bulkDeleting}
             className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-1.5 rounded-xl transition-colors disabled:opacity-60"
           >
-            {bulkDeleting ? <><Loader2 size={13} className="animate-spin" />Eliminando...</> : <><Trash2 size={13} />{t('common.delete')} {selected.size}</>}
+            {bulkDeleting ? <><Loader2 size={13} className="animate-spin" />Eliminando...</> : <><Trash2 size={13} />Eliminar {selected.size}</>}
           </button>
         </div>
       )}
@@ -300,7 +297,7 @@ export default function WorkCentersPage() {
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
               <h2 className="font-bold text-slate-900">
-                {editing ? t('workCenters.editTitle') : t('workCenters.createTitle')}
+                {editing ? 'Editar centro de trabajo' : 'Nuevo centro de trabajo'}
               </h2>
               <button onClick={closeModal} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                 <X size={18} className="text-slate-400" />
@@ -310,65 +307,65 @@ export default function WorkCentersPage() {
             <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="label">{t('workCenters.name')} *</label>
+                  <label className="label">Nombre *</label>
                   <input
                     className="input"
                     value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    placeholder={t('workCenters.namePlaceholder')}
+                    placeholder="Sede central"
                   />
                 </div>
                 <div>
-                  <label className="label">{t('workCenters.code')}</label>
+                  <label className="label">Código</label>
                   <input
                     className="input"
                     value={form.code}
                     onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
-                    placeholder={t('workCenters.codePlaceholder')}
+                    placeholder="HQ-01"
                   />
                 </div>
                 <div>
-                  <label className="label">{t('workCenters.city')}</label>
+                  <label className="label">Ciudad</label>
                   <input
                     className="input"
                     value={form.city}
                     onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                    placeholder={t('workCenters.cityPlaceholder')}
+                    placeholder="Madrid"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="label">{t('workCenters.address')}</label>
+                  <label className="label">Dirección</label>
                   <input
                     className="input"
                     value={form.address}
                     onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                    placeholder={t('workCenters.addressPlaceholder')}
+                    placeholder="Calle Mayor, 1"
                   />
                 </div>
                 <div>
-                  <label className="label">{t('workCenters.latitude')}</label>
+                  <label className="label">Latitud</label>
                   <input
                     className="input"
                     type="number"
                     step="any"
                     value={form.latitude}
                     onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))}
-                    placeholder={t('workCenters.latitudePlaceholder')}
+                    placeholder="40.416775"
                   />
                 </div>
                 <div>
-                  <label className="label">{t('workCenters.longitude')}</label>
+                  <label className="label">Longitud</label>
                   <input
                     className="input"
                     type="number"
                     step="any"
                     value={form.longitude}
                     onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))}
-                    placeholder={t('workCenters.longitudePlaceholder')}
+                    placeholder="-3.703790"
                   />
                 </div>
                 <div>
-                  <label className="label">{t('workCenters.radius')}</label>
+                  <label className="label">Radio (metros)</label>
                   <input
                     className="input"
                     type="number"
@@ -377,7 +374,7 @@ export default function WorkCentersPage() {
                   />
                 </div>
                 <div>
-                  <label className="label">{t('workCenters.timezone')}</label>
+                  <label className="label">Zona horaria</label>
                   <select
                     className="input"
                     value={form.timezone}
@@ -398,7 +395,7 @@ export default function WorkCentersPage() {
                     onChange={(e) => setForm((f) => ({ ...f, requireGps: e.target.checked }))}
                     className="w-4 h-4 rounded text-indigo-600"
                   />
-                  <span className="text-sm text-slate-700">{t('workCenters.requireGps')}</span>
+                  <span className="text-sm text-slate-700">Requerir GPS</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -407,7 +404,7 @@ export default function WorkCentersPage() {
                     onChange={(e) => setForm((f) => ({ ...f, allowRemote: e.target.checked }))}
                     className="w-4 h-4 rounded text-indigo-600"
                   />
-                  <span className="text-sm text-slate-700">{t('workCenters.allowRemote')}</span>
+                  <span className="text-sm text-slate-700">Permitir remoto</span>
                 </label>
               </div>
 
@@ -425,10 +422,10 @@ export default function WorkCentersPage() {
                     ? <Loader2 size={15} className="animate-spin" />
                     : <Check size={15} />
                   }
-                  {editing ? t('common.save') : t('workCenters.new')}
+                  {editing ? 'Guardar' : 'Crear centro'}
                 </button>
                 <button type="button" onClick={closeModal} className="btn-secondary px-6">
-                  {t('common.cancel')}
+                  Cancelar
                 </button>
               </div>
             </form>

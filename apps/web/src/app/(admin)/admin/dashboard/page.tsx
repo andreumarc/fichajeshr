@@ -10,8 +10,8 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/en';
-import { useTranslation } from 'react-i18next';
-import '@/lib/i18n';
+
+dayjs.locale('es');
 
 interface StatCardProps {
   icon: React.ElementType;
@@ -33,7 +33,6 @@ const COLOR_MAP: Record<StatCardProps['color'], { bg: string; iconBg: string; te
 };
 
 function StatCard({ icon: Icon, label, value, color, href }: StatCardProps) {
-  const { t } = useTranslation();
   const c = COLOR_MAP[color];
   const inner = (
     <div className={`relative overflow-hidden rounded-2xl p-5 ${c.bg} group transition-all duration-200 hover:shadow-brand-lg hover:-translate-y-0.5`}>
@@ -55,7 +54,7 @@ function StatCard({ icon: Icon, label, value, color, href }: StatCardProps) {
 
       {href && (
         <div className="relative mt-4 flex items-center gap-1 text-white/50 text-xs font-medium group-hover:text-white/80 transition-colors">
-          {t('common.actions')} <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+          Ver más <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
         </div>
       )}
     </div>
@@ -64,7 +63,6 @@ function StatCard({ icon: Icon, label, value, color, href }: StatCardProps) {
 }
 
 function EmployeeRow({ emp, variant }: { emp: any; variant: 'working' | 'break' | 'absent' }) {
-  const { t } = useTranslation();
   const initials = emp.name?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
   const style = {
     working: { dot: 'bg-accent-500', avatar: 'bg-accent-50 text-accent-700', hover: 'hover:bg-accent-50/50' },
@@ -87,7 +85,7 @@ function EmployeeRow({ emp, variant }: { emp: any; variant: 'working' | 'break' 
             {emp.lastEntryTime ? dayjs(emp.lastEntryTime).format('HH:mm') : '—'}
           </p>
         ) : (
-          <span className="badge-gray">{t('dashboard.notClockedLabel')}</span>
+          <span className="badge-gray">Sin fichar</span>
         )}
       </div>
     </div>
@@ -95,15 +93,6 @@ function EmployeeRow({ emp, variant }: { emp: any; variant: 'working' | 'break' 
 }
 
 export default function AdminDashboard() {
-  const { t, i18n } = useTranslation();
-
-  // Set dayjs locale based on current language
-  dayjs.locale(
-    i18n.language === 'ca' ? 'ca' :
-    i18n.language === 'en' ? 'en' :
-    'es'
-  );
-
   const { data: stats } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: () => api.get('/reports/dashboard').then((r) => r.data),
@@ -121,14 +110,14 @@ export default function AdminDashboard() {
   const absent  = todayStatus?.filter((e: any) => e.status === 'NOT_CLOCKED_IN') ?? [];
 
   const statCards: StatCardProps[] = [
-    { icon: Users,      label: t('dashboard.totalEmployees'),  value: stats?.totalEmployees, color: 'navy',   href: '/admin/employees' },
-    { icon: UserCheck,  label: t('dashboard.workingNow'),      value: stats?.clockedInNow,   color: 'teal' },
-    { icon: Coffee,     label: t('dashboard.onBreak'),         value: stats?.onBreakNow,     color: 'amber' },
-    { icon: UserX,      label: t('dashboard.notClockedIn'),    value: stats?.notClockedIn,   color: 'slate' },
-    { icon: MapPinOff,  label: t('dashboard.outOfZone'),       value: stats?.outOfZoneToday, color: 'orange' },
-    { icon: AlertCircle,label: t('dashboard.openIncidents'),   value: stats?.openIncidents,  color: 'rose',   href: '/admin/incidents' },
-    { icon: TrendingUp, label: t('dashboard.weeklyEntries'),   value: stats?.weeklyEntries,  color: 'violet' },
-    { icon: Clock,      label: t('dashboard.activeToday'),     value: stats?.activeToday,    color: 'sky' },
+    { icon: Users,      label: 'Total empleados',    value: stats?.totalEmployees, color: 'navy',   href: '/admin/employees' },
+    { icon: UserCheck,  label: 'Trabajando ahora',   value: stats?.clockedInNow,   color: 'teal' },
+    { icon: Coffee,     label: 'En pausa',            value: stats?.onBreakNow,     color: 'amber' },
+    { icon: UserX,      label: 'Sin fichar',          value: stats?.notClockedIn,   color: 'slate' },
+    { icon: MapPinOff,  label: 'Fuera de zona hoy',  value: stats?.outOfZoneToday, color: 'orange' },
+    { icon: AlertCircle,label: 'Incidencias abiertas',value: stats?.openIncidents,  color: 'rose',   href: '/admin/incidents' },
+    { icon: TrendingUp, label: 'Fichajes esta semana',value: stats?.weeklyEntries,  color: 'violet' },
+    { icon: Clock,      label: 'Activos hoy',         value: stats?.activeToday,    color: 'sky' },
   ];
 
   return (
@@ -137,14 +126,14 @@ export default function AdminDashboard() {
       {/* ── Header ──────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-brand-800">{t('dashboard.title')}</h1>
+          <h1 className="text-2xl font-bold text-brand-800">Panel de control</h1>
           <p className="text-slate-500 text-sm mt-0.5 capitalize">
             {dayjs().format('dddd, D [de] MMMM [de] YYYY')}
           </p>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-50 text-accent-700 rounded-full text-xs font-semibold ring-1 ring-accent-200">
           <span className="w-1.5 h-1.5 bg-accent-500 rounded-full animate-pulse" />
-          {t('dashboard.realtime')}
+          Tiempo real
         </div>
       </div>
 
@@ -161,13 +150,13 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-50">
             <h2 className="font-semibold text-brand-800 flex items-center gap-2 text-sm">
               <span className="w-2 h-2 bg-accent-500 rounded-full animate-pulse" />
-              {t('dashboard.working')}
+              Trabajando
             </h2>
             <span className="badge-accent">{working.length}</span>
           </div>
           <div className="space-y-0.5 max-h-60 overflow-y-auto">
             {working.length === 0
-              ? <p className="text-slate-400 text-sm text-center py-8">{t('dashboard.noWorking')}</p>
+              ? <p className="text-slate-400 text-sm text-center py-8">Nadie trabajando</p>
               : working.map((emp: any) => <EmployeeRow key={emp.id} emp={emp} variant="working" />)
             }
           </div>
@@ -178,13 +167,13 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-50">
             <h2 className="font-semibold text-brand-800 flex items-center gap-2 text-sm">
               <span className="w-2 h-2 bg-amber-500 rounded-full" />
-              {t('dashboard.onBreakLabel')}
+              En pausa
             </h2>
             <span className="badge-yellow">{onBreak.length}</span>
           </div>
           <div className="space-y-0.5 max-h-60 overflow-y-auto">
             {onBreak.length === 0
-              ? <p className="text-slate-400 text-sm text-center py-8">{t('dashboard.noOnBreak')}</p>
+              ? <p className="text-slate-400 text-sm text-center py-8">Nadie en pausa</p>
               : onBreak.map((emp: any) => <EmployeeRow key={emp.id} emp={emp} variant="break" />)
             }
           </div>
@@ -195,13 +184,13 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-50">
             <h2 className="font-semibold text-brand-800 flex items-center gap-2 text-sm">
               <span className="w-2 h-2 bg-slate-300 rounded-full" />
-              {t('dashboard.notClockedLabel')}
+              Sin fichar
             </h2>
             <span className="badge-gray">{absent.length}</span>
           </div>
           <div className="space-y-0.5 max-h-60 overflow-y-auto">
             {absent.length === 0
-              ? <p className="text-slate-400 text-sm text-center py-8">{t('dashboard.allClockedIn')}</p>
+              ? <p className="text-slate-400 text-sm text-center py-8">Todos han fichado</p>
               : absent.map((emp: any) => <EmployeeRow key={emp.id} emp={emp} variant="absent" />)
             }
           </div>
@@ -210,23 +199,23 @@ export default function AdminDashboard() {
 
       {/* ── Quick actions ────────────────────────────── */}
       <div>
-        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">{t('dashboard.quickAccess')}</h2>
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Acceso rápido</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { labelKey: 'nav.employees',   href: '/admin/employees',    icon: Users,    color: 'text-brand-600',  bg: 'hover:bg-brand-50' },
-            { labelKey: 'nav.timeEntries', href: '/admin/time-entries', icon: Clock,    color: 'text-accent-600',   bg: 'hover:bg-accent-50' },
-            { labelKey: 'nav.workCenters', href: '/admin/work-centers', icon: Building2,color: 'text-violet-600', bg: 'hover:bg-violet-50' },
-            { labelKey: 'nav.reports',     href: '/admin/reports',      icon: BarChart3,color: 'text-sky-600',    bg: 'hover:bg-sky-50' },
-          ].map(({ labelKey, href, icon: Icon, color, bg }) => (
+            { label: 'Empleados',         href: '/admin/employees',    icon: Users,    color: 'text-brand-600',  bg: 'hover:bg-brand-50' },
+            { label: 'Fichajes',          href: '/admin/time-entries', icon: Clock,    color: 'text-accent-600',   bg: 'hover:bg-accent-50' },
+            { label: 'Centros de trabajo',href: '/admin/work-centers', icon: Building2,color: 'text-violet-600', bg: 'hover:bg-violet-50' },
+            { label: 'Informes',          href: '/admin/reports',      icon: BarChart3,color: 'text-sky-600',    bg: 'hover:bg-sky-50' },
+          ].map(({ label, href, icon: Icon, color, bg }) => (
             <Link
-              key={labelKey}
+              key={label}
               href={href}
               className={`card flex items-center gap-3 font-semibold text-sm ${bg} transition-all hover:shadow-brand-md group border-brand-50`}
             >
               <div className={`w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
                 <Icon size={17} className={color} />
               </div>
-              <span className="text-slate-700 flex-1">{t(labelKey)}</span>
+              <span className="text-slate-700 flex-1">{label}</span>
               <ArrowRight size={14} className="text-slate-300 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all" />
             </Link>
           ))}

@@ -1,7 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import Cookies from 'js-cookie';
 import {
@@ -9,7 +8,6 @@ import {
   Loader2, X, Users, Edit2, Trash2, RotateCcw, Copy, Check,
   Upload, Download, AlertTriangle, FileSpreadsheet,
 } from 'lucide-react';
-import '@/lib/i18n';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -38,7 +36,6 @@ const emptyForm = {
 };
 
 function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const { t } = useTranslation();
   const [form, setForm]         = useState(emptyForm);
   const [error, setError]       = useState('');
   const [tempPwd, setTempPwd]   = useState<{ name: string; email: string; password: string } | null>(null);
@@ -94,7 +91,7 @@ function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSucce
         onClose();
       }
     },
-    onError: (e: any) => setError(e.response?.data?.message ?? t('employees.saveError')),
+    onError: (e: any) => setError(e.response?.data?.message ?? 'Error al guardar el empleado'),
   });
 
   const set = (f: keyof typeof emptyForm) =>
@@ -125,7 +122,7 @@ function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 rounded-t-2xl">
             <div>
-              <h2 className="text-base font-bold text-brand-800">{t('employees.createTitle')}</h2>
+              <h2 className="text-base font-bold text-brand-800">Crear empleado</h2>
               <p className="text-xs text-slate-400 mt-0.5">Completa los datos para dar de alta al empleado</p>
             </div>
             <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
@@ -147,23 +144,23 @@ function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSucce
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Datos personales</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="label">{t('employees.firstName')} *</label>
+                  <label className="label">Nombre *</label>
                   <input className="input" placeholder="Ana" value={form.firstName} onChange={set('firstName')} />
                 </div>
                 <div>
-                  <label className="label">{t('employees.lastName')} *</label>
+                  <label className="label">Apellidos *</label>
                   <input className="input" placeholder="García López" value={form.lastName} onChange={set('lastName')} />
                 </div>
                 <div>
-                  <label className="label">{t('employees.dni')}</label>
+                  <label className="label">DNI</label>
                   <input className="input" placeholder="12345678A" value={form.dni} onChange={set('dni')} />
                 </div>
                 <div>
-                  <label className="label">{t('employees.phone')}</label>
+                  <label className="label">Teléfono</label>
                   <input className="input" placeholder="+34 600 000 000" value={form.phone} onChange={set('phone')} />
                 </div>
                 <div className={form.email ? 'sm:col-span-1' : 'sm:col-span-2'}>
-                  <label className="label">{t('employees.email')}</label>
+                  <label className="label">Email</label>
                   <input className="input" type="email" placeholder="ana@empresa.com" value={form.email} onChange={set('email')} />
                 </div>
                 {form.email && (
@@ -186,25 +183,25 @@ function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSucce
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Datos laborales</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="label">{t('employees.employeeCode')} *</label>
+                  <label className="label">Código de empleado *</label>
                   <input className="input" placeholder="EMP-001" value={form.employeeCode} onChange={set('employeeCode')} />
                 </div>
                 <div>
-                  <label className="label">{t('employees.weeklyHours')}</label>
+                  <label className="label">Horas semanales</label>
                   <input className="input" type="number" min={0} max={60} value={form.weeklyHours} onChange={set('weeklyHours')} />
                 </div>
                 <div>
-                  <label className="label">{t('employees.department')}</label>
+                  <label className="label">Departamento</label>
                   <input className="input" placeholder="Tecnología" value={form.department} onChange={set('department')} />
                 </div>
                 <div>
-                  <label className="label">{t('employees.position')}</label>
+                  <label className="label">Cargo</label>
                   <input className="input" placeholder="Desarrollador" value={form.position} onChange={set('position')} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="label">{t('employees.workCenter')}</label>
+                  <label className="label">Centro de trabajo</label>
                   <select className="input" value={form.workCenterId} onChange={set('workCenterId')}>
-                    <option value="">{t('common.none')}</option>
+                    <option value="">Ninguno</option>
                     {workCenters.map((wc: WorkCenter) => (
                       <option key={wc.id} value={wc.id}>{wc.name}</option>
                     ))}
@@ -213,7 +210,7 @@ function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSucce
                 <div>
                   <label className="label">Horario de trabajo</label>
                   <select className="input" value={form.scheduleId} onChange={set('scheduleId')}>
-                    <option value="">{t('common.none')}</option>
+                    <option value="">Ninguno</option>
                     {schedules.map((s: Schedule) => (
                       <option key={s.id} value={s.id}>
                         {s.name} — {s.weeklyHours}h/sem
@@ -240,9 +237,9 @@ function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSucce
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Métodos de fichaje</p>
               <div className="flex flex-wrap gap-3">
                 {([
-                  { key: 'allowMobile', label: t('employees.allowMobile') },
-                  { key: 'allowWeb',    label: t('employees.allowWeb') },
-                  { key: 'allowKiosk',  label: t('employees.allowKiosk') },
+                  { key: 'allowMobile', label: 'Móvil' },
+                  { key: 'allowWeb',    label: 'Web' },
+                  { key: 'allowKiosk',  label: 'Kiosco' },
                 ] as const).map(({ key, label }) => (
                   <label key={key} className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border border-slate-200 hover:border-brand-300 transition-colors">
                     <input
@@ -256,7 +253,7 @@ function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSucce
                 ))}
               </div>
               <div className="mt-4">
-                <label className="label">{t('employees.pinOptional')}</label>
+                <label className="label">PIN (opcional)</label>
                 <input
                   className="input"
                   type="text"
@@ -272,7 +269,7 @@ function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
-            <button onClick={onClose} className="btn-secondary text-sm py-2 px-4">{t('common.cancel')}</button>
+            <button onClick={onClose} className="btn-secondary text-sm py-2 px-4">Cancelar</button>
             <button
               onClick={() => mutation.mutate()}
               disabled={mutation.isPending || !canSubmit}
@@ -280,7 +277,7 @@ function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             >
               {mutation.isPending
                 ? <><Loader2 size={14} className="animate-spin" />Creando...</>
-                : <>{t('employees.new')}</>
+                : <>Nuevo empleado</>
               }
             </button>
           </div>
@@ -296,7 +293,6 @@ function NewEmployeeModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 function TempPasswordModal({ name, email, password, onClose }: {
   name: string; email: string; password: string; onClose: () => void;
 }) {
-  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(password);
@@ -316,7 +312,7 @@ function TempPasswordModal({ name, email, password, onClose }: {
         </div>
         <div className="p-6 space-y-4">
           <div className="text-center">
-            <p className="text-sm text-slate-600">{t('employees.resetPasswordTitle')}</p>
+            <p className="text-sm text-slate-600">Contraseña temporal para</p>
             <p className="font-semibold text-slate-900">{name}</p>
             <p className="text-xs text-slate-400">{email}</p>
           </div>
@@ -329,9 +325,9 @@ function TempPasswordModal({ name, email, password, onClose }: {
             </button>
           </div>
           <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-700">
-            <strong>Importante:</strong> {t('employees.resetPasswordDesc')}
+            <strong>Importante:</strong> El empleado deberá cambiar esta contraseña en su primer inicio de sesión.
           </div>
-          <button onClick={onClose} className="btn-primary w-full">{t('common.confirm')}</button>
+          <button onClick={onClose} className="btn-primary w-full">Aceptar</button>
         </div>
       </div>
     </div>
@@ -341,7 +337,6 @@ function TempPasswordModal({ name, email, password, onClose }: {
 // ── Edit Employee Modal ────────────────────────────────────────────────────────
 
 function EditEmployeeModal({ employee, onClose, onSuccess }: { employee: any; onClose: () => void; onSuccess: () => void }) {
-  const { t } = useTranslation();
   const [form, setForm] = useState({
     firstName:    employee.firstName   ?? '',
     lastName:     employee.lastName    ?? '',
@@ -384,7 +379,7 @@ function EditEmployeeModal({ employee, onClose, onSuccess }: { employee: any; on
       return api.patch(`/employees/${employee.id}`, payload).then(r => r.data);
     },
     onSuccess: () => { onSuccess(); onClose(); },
-    onError: (e: any) => setError(e.response?.data?.message ?? t('employees.saveError')),
+    onError: (e: any) => setError(e.response?.data?.message ?? 'Error al guardar el empleado'),
   });
 
   const set = (f: string) =>
@@ -402,7 +397,7 @@ function EditEmployeeModal({ employee, onClose, onSuccess }: { employee: any; on
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 rounded-t-2xl">
             <div>
-              <h2 className="text-base font-bold text-brand-800">{t('employees.editTitle')}</h2>
+              <h2 className="text-base font-bold text-brand-800">Editar empleado</h2>
               <p className="text-xs text-slate-400 mt-0.5">{employee.firstName} {employee.lastName}</p>
             </div>
             <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
@@ -424,23 +419,23 @@ function EditEmployeeModal({ employee, onClose, onSuccess }: { employee: any; on
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Datos personales</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="label">{t('employees.firstName')} *</label>
+                  <label className="label">Nombre *</label>
                   <input className="input" value={form.firstName} onChange={set('firstName')} />
                 </div>
                 <div>
-                  <label className="label">{t('employees.lastName')} *</label>
+                  <label className="label">Apellidos *</label>
                   <input className="input" value={form.lastName} onChange={set('lastName')} />
                 </div>
                 <div>
-                  <label className="label">{t('employees.dni')}</label>
+                  <label className="label">DNI</label>
                   <input className="input" value={form.dni} onChange={set('dni')} />
                 </div>
                 <div>
-                  <label className="label">{t('employees.phone')}</label>
+                  <label className="label">Teléfono</label>
                   <input className="input" value={form.phone} onChange={set('phone')} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="label">{t('employees.email')}</label>
+                  <label className="label">Email</label>
                   <input className="input" type="email" value={form.email} onChange={set('email')} />
                 </div>
               </div>
@@ -451,30 +446,30 @@ function EditEmployeeModal({ employee, onClose, onSuccess }: { employee: any; on
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Datos laborales</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="label">{t('employees.weeklyHours')}</label>
+                  <label className="label">Horas semanales</label>
                   <input className="input" type="number" min={0} max={60} value={form.weeklyHours} onChange={set('weeklyHours')} />
                 </div>
                 <div>
                   <label className="label">Estado</label>
                   <select className="input" value={form.status} onChange={set('status')}>
-                    <option value="ACTIVE">{t('status.active')}</option>
-                    <option value="INACTIVE">{t('status.inactive')}</option>
+                    <option value="ACTIVE">Activo</option>
+                    <option value="INACTIVE">Inactivo</option>
                     <option value="SUSPENDED">Suspendido</option>
                     <option value="ON_LEAVE">Baja</option>
                   </select>
                 </div>
                 <div>
-                  <label className="label">{t('employees.department')}</label>
+                  <label className="label">Departamento</label>
                   <input className="input" value={form.department} onChange={set('department')} />
                 </div>
                 <div>
-                  <label className="label">{t('employees.position')}</label>
+                  <label className="label">Cargo</label>
                   <input className="input" value={form.position} onChange={set('position')} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="label">{t('employees.workCenter')}</label>
+                  <label className="label">Centro de trabajo</label>
                   <select className="input" value={form.workCenterId} onChange={set('workCenterId')}>
-                    <option value="">{t('common.none')}</option>
+                    <option value="">Ninguno</option>
                     {workCenters.map((wc: WorkCenter) => (
                       <option key={wc.id} value={wc.id}>{wc.name}</option>
                     ))}
@@ -488,9 +483,9 @@ function EditEmployeeModal({ employee, onClose, onSuccess }: { employee: any; on
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Métodos de fichaje</p>
               <div className="flex flex-wrap gap-3">
                 {([
-                  { key: 'allowMobile', label: t('employees.allowMobile') },
-                  { key: 'allowWeb',    label: t('employees.allowWeb') },
-                  { key: 'allowKiosk',  label: t('employees.allowKiosk') },
+                  { key: 'allowMobile', label: 'Móvil' },
+                  { key: 'allowWeb',    label: 'Web' },
+                  { key: 'allowKiosk',  label: 'Kiosco' },
                 ] as const).map(({ key, label }) => (
                   <label key={key} className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border border-slate-200 hover:border-brand-300 transition-colors">
                     <input
@@ -508,7 +503,7 @@ function EditEmployeeModal({ employee, onClose, onSuccess }: { employee: any; on
 
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
-            <button onClick={onClose} className="btn-secondary text-sm py-2 px-4">{t('common.cancel')}</button>
+            <button onClick={onClose} className="btn-secondary text-sm py-2 px-4">Cancelar</button>
             <button
               onClick={() => mutation.mutate()}
               disabled={mutation.isPending || !form.firstName.trim() || !form.lastName.trim()}
@@ -516,7 +511,7 @@ function EditEmployeeModal({ employee, onClose, onSuccess }: { employee: any; on
             >
               {mutation.isPending
                 ? <><Loader2 size={14} className="animate-spin" />Guardando...</>
-                : <>{t('common.save')}</>
+                : <>Guardar</>
               }
             </button>
           </div>
@@ -535,7 +530,6 @@ function ImportResultModal({
   result: { created: number; skipped: number; errors: { row: number; message: string }[] };
   onClose: () => void;
 }) {
-  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
@@ -547,7 +541,7 @@ function ImportResultModal({
               <FileSpreadsheet size={18} className="text-emerald-600" />
             </div>
             <div>
-              <h2 className="font-bold text-slate-900 text-sm">{t('employees.importResult')}</h2>
+              <h2 className="font-bold text-slate-900 text-sm">Resultado de la importación</h2>
               <p className="text-xs text-slate-400 mt-0.5">Resumen del proceso</p>
             </div>
           </div>
@@ -576,14 +570,14 @@ function ImportResultModal({
         {result.errors.length > 0 && (
           <div className="px-6 pb-2 flex-1 overflow-y-auto">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-              {t('employees.importErrors', { count: result.errors.length })}
+              {result.errors.length} errores encontrados
             </p>
             <div className="space-y-1.5">
               {result.errors.map((err, i) => (
                 <div key={i} className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
                   <AlertTriangle size={13} className="text-amber-500 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <span className="text-xs font-semibold text-amber-700">{t('employees.importRow', { row: err.row })}: </span>
+                    <span className="text-xs font-semibold text-amber-700">Fila {err.row}: </span>
                     <span className="text-xs text-amber-700">{err.message}</span>
                   </div>
                 </div>
@@ -604,7 +598,7 @@ function ImportResultModal({
         {/* Footer */}
         <div className="px-6 py-4 border-t border-slate-100 flex-shrink-0">
           <button onClick={onClose} className="btn-primary w-full">
-            {t('employees.importClose')}
+            Cerrar
           </button>
         </div>
       </div>
@@ -615,7 +609,6 @@ function ImportResultModal({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function EmployeesPage() {
-  const { t } = useTranslation();
   const [search, setSearch]         = useState('');
   const [page, setPage]             = useState(1);
   const [modalOpen, setModalOpen]   = useState(false);
@@ -648,12 +641,12 @@ export default function EmployeesPage() {
       link.click();
       URL.revokeObjectURL(link.href);
     } catch {
-      alert(t('common.exportError'));
+      alert('Error al exportar los datos');
     }
   };
 
-  const handleDownloadTemplate = () => downloadBlob('/employees/import/template', t('employees.templateFile'));
-  const handleExport           = () => downloadBlob('/employees/export/excel', t('employees.exportFile'));
+  const handleDownloadTemplate = () => downloadBlob('/employees/import/template', 'plantilla_empleados.xlsx');
+  const handleExport           = () => downloadBlob('/employees/export/excel', 'empleados.xlsx');
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -671,7 +664,7 @@ export default function EmployeesPage() {
       setImportResult(res.data);
       qc.invalidateQueries({ queryKey: ['employees'] });
     } catch (err: any) {
-      alert(err.response?.data?.message ?? t('common.exportError'));
+      alert(err.response?.data?.message ?? 'Error al exportar los datos');
     } finally {
       setImporting(false);
     }
@@ -725,8 +718,8 @@ export default function EmployeesPage() {
 
   const handleBulkDelete = async () => {
     const msg = selected.size === 1
-      ? t('common.deleteConfirm', { count: selected.size })
-      : t('common.deleteConfirmPlural', { count: selected.size });
+      ? `¿Eliminar ${selected.size} empleado?`
+      : `¿Eliminar ${selected.size} empleados?`;
     if (!confirm(msg)) return;
     setBulkDeleting(true);
     try {
@@ -734,7 +727,7 @@ export default function EmployeesPage() {
       setSelected(new Set());
       qc.invalidateQueries({ queryKey: ['employees'] });
     } catch (e) {
-      alert(t('common.deleteError'));
+      alert('Error al eliminar los elementos');
     } finally {
       setBulkDeleting(false);
     }
@@ -747,9 +740,9 @@ export default function EmployeesPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">{t('employees.title')}</h1>
+          <h1 className="text-xl font-bold text-slate-900">Empleados</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            {data ? t('employees.subtitle', { count: data.total }) : t('common.loading')}
+            {data ? `${data.total} empleados` : 'Cargando...'}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -757,9 +750,9 @@ export default function EmployeesPage() {
           <button
             onClick={handleExport}
             className="btn-secondary text-sm gap-1.5"
-            title={t('common.export')}
+            title="Exportar"
           >
-            <Download size={14} /> {t('common.export')}
+            <Download size={14} /> Exportar
           </button>
 
           {/* Descargar plantilla de importación */}
@@ -767,9 +760,9 @@ export default function EmployeesPage() {
             <button
               onClick={handleDownloadTemplate}
               className="btn-secondary text-sm gap-1.5"
-              title={t('common.template')}
+              title="Plantilla"
             >
-              <FileSpreadsheet size={14} /> {t('common.template')}
+              <FileSpreadsheet size={14} /> Plantilla
             </button>
           )}
 
@@ -787,18 +780,18 @@ export default function EmployeesPage() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importing}
                 className="btn-secondary text-sm gap-1.5"
-                title={t('common.import')}
+                title="Importar"
               >
                 {importing
                   ? <><Loader2 size={14} className="animate-spin" /> Importando...</>
-                  : <><Upload size={14} /> {t('common.import')}</>
+                  : <><Upload size={14} /> Importar</>
                 }
               </button>
             </>
           )}
 
           <button className="btn-primary text-sm gap-1.5" onClick={() => setModalOpen(true)}>
-            <Plus size={15} /> {t('employees.new')}
+            <Plus size={15} /> Nuevo empleado
           </button>
         </div>
       </div>
@@ -808,7 +801,7 @@ export default function EmployeesPage() {
         <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
-          placeholder={t('employees.searchPlaceholder')}
+          placeholder="Buscar por nombre, código o email..."
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           className="input pl-10 text-sm"
@@ -832,13 +825,13 @@ export default function EmployeesPage() {
                     }}
                   />
                 </th>
-                <th className="table-header">{t('employees.title')}</th>
-                <th className="table-header">{t('employees.employeeCode')}</th>
-                <th className="table-header">{t('employees.department')}</th>
-                <th className="table-header">{t('employees.workCenter')}</th>
+                <th className="table-header">Empleados</th>
+                <th className="table-header">Código</th>
+                <th className="table-header">Departamento</th>
+                <th className="table-header">Centro de trabajo</th>
                 <th className="table-header">Estado</th>
                 <th className="table-header">Acceso</th>
-                <th className="table-header w-24">{t('common.actions')}</th>
+                <th className="table-header w-24">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -846,7 +839,7 @@ export default function EmployeesPage() {
                 <tr>
                   <td colSpan={8} className="text-center py-16 text-slate-400">
                     <Loader2 className="animate-spin mx-auto mb-2" size={20} />
-                    {t('common.loading')}
+                    Cargando...
                   </td>
                 </tr>
               ) : data?.data?.length === 0 ? (
@@ -854,12 +847,12 @@ export default function EmployeesPage() {
                   <td colSpan={8} className="py-20">
                     <div className="text-center">
                       <Users size={40} className="text-slate-200 mx-auto mb-3" />
-                      <p className="text-slate-400 text-sm">{t('common.noData')}</p>
+                      <p className="text-slate-400 text-sm">Sin datos</p>
                       <button
                         onClick={() => setModalOpen(true)}
                         className="mt-3 text-accent-600 text-xs font-semibold hover:underline"
                       >
-                        {t('employees.new')}
+                        Nuevo empleado
                       </button>
                     </div>
                   </td>
@@ -900,27 +893,27 @@ export default function EmployeesPage() {
                     <td className="table-cell text-slate-600">{emp.workCenter?.name ?? '—'}</td>
                     <td className="table-cell">
                       <span className={emp.status === 'ACTIVE' ? 'badge-green' : 'badge-gray'}>
-                        {emp.status === 'ACTIVE' ? t('status.active') : t('status.inactive')}
+                        {emp.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
                     <td className="table-cell">
                       <div className="flex flex-wrap gap-1">
-                        {emp.allowMobile && <span className="badge-blue">{t('employees.allowMobile')}</span>}
+                        {emp.allowMobile && <span className="badge-blue">Móvil</span>}
                         {emp.allowWeb    && <span className="badge-blue">Web</span>}
-                        {emp.allowKiosk  && <span className="badge-gray">{t('employees.allowKiosk')}</span>}
+                        {emp.allowKiosk  && <span className="badge-gray">Kiosco</span>}
                       </div>
                     </td>
                     <td className="table-cell">
                       <div className="flex items-center gap-1">
                         <button
-                          title={t('common.edit')}
+                          title="Editar"
                           onClick={() => setEditEmp(emp)}
                           className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                         >
                           <Edit2 size={14} />
                         </button>
                         <button
-                          title={t('employees.resetPassword')}
+                          title="Resetear contraseña"
                           onClick={() => resetPasswordMutation.mutate(emp)}
                           disabled={resetPasswordMutation.isPending}
                           className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -945,7 +938,7 @@ export default function EmployeesPage() {
                           <QrCode size={14} />
                         </button>
                         <button
-                          title={t('common.delete')}
+                          title="Eliminar"
                           onClick={() => setDeleteEmp(emp)}
                           className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
                         >
@@ -964,14 +957,14 @@ export default function EmployeesPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50">
             <p className="text-sm text-slate-500">
-              Página {page} {t('common.of')} {totalPages} · {data?.total} {t('employees.title').toLowerCase()}
+              Página {page} de {totalPages} · {data?.total} empleados
             </p>
             <div className="flex items-center gap-2">
               <button onClick={() => { setPage(p => p - 1); setSelected(new Set()); }} disabled={page === 1} className="btn-secondary text-xs px-3 py-1.5 gap-1">
-                <ChevronLeft size={14} /> {t('common.previous')}
+                <ChevronLeft size={14} /> Anterior
               </button>
               <button onClick={() => { setPage(p => p + 1); setSelected(new Set()); }} disabled={page >= totalPages} className="btn-secondary text-xs px-3 py-1.5 gap-1">
-                {t('common.next')} <ChevronRight size={14} />
+                Siguiente <ChevronRight size={14} />
               </button>
             </div>
           </div>
@@ -982,21 +975,21 @@ export default function EmployeesPage() {
       {selected.size > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 bg-brand-800 text-white px-5 py-3 rounded-2xl shadow-2xl shadow-brand-900/40">
           <span className="text-sm font-semibold">
-            {selected.size} {selected.size === 1 ? t('common.selected') : t('common.selectedPlural')}
+            {selected.size} {selected.size === 1 ? 'seleccionado' : 'seleccionados'}
           </span>
           <div className="w-px h-5 bg-white/20" />
           <button
             onClick={() => setSelected(new Set())}
             className="text-sm text-white/70 hover:text-white transition-colors"
           >
-            {t('common.deselectAll')}
+            Deseleccionar todo
           </button>
           <button
             onClick={handleBulkDelete}
             disabled={bulkDeleting}
             className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-1.5 rounded-xl transition-colors disabled:opacity-60"
           >
-            {bulkDeleting ? <><Loader2 size={13} className="animate-spin" />Eliminando...</> : <><Trash2 size={13} />{t('common.delete')} {selected.size}</>}
+            {bulkDeleting ? <><Loader2 size={13} className="animate-spin" />Eliminando...</> : <><Trash2 size={13} />Eliminar {selected.size}</>}
           </button>
         </div>
       )}
@@ -1068,10 +1061,10 @@ export default function EmployeesPage() {
                 className="flex-1 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {deactivateMutation.isPending && <Loader2 size={14} className="animate-spin" />}
-                {t('common.confirm')}
+                Confirmar
               </button>
               <button onClick={() => setDeleteEmp(null)} className="btn-secondary px-5">
-                {t('common.cancel')}
+                Cancelar
               </button>
             </div>
           </div>
