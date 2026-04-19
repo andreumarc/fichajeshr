@@ -20,6 +20,7 @@ import { SuperAdminModule } from './superadmin/superadmin.module';
 import { SchedulesModule } from './schedules/schedules.module';
 import { LeaveRequestsModule } from './leave-requests/leave-requests.module';
 import { MailModule } from './mail/mail.module';
+import { SyncModule } from './sync/sync.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { MailModule } from './mail/mail.module';
     SchedulesModule,
     LeaveRequestsModule,
     MailModule,
+    SyncModule,
   ],
   controllers: [HealthController],
   providers: [
