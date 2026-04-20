@@ -13,6 +13,7 @@ import api from '@/lib/api';
 import clsx from 'clsx';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
+import { GlobalFilters } from '@/components/layout/global-filters';
 
 /* ─── ImpulsoDent Design System — Sidebar tokens ─────────────── */
 const S = {
@@ -385,6 +386,9 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
             </button>
           </div>
         </header>
+
+        {/* Global filter bar */}
+        <GlobalFilters />
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto scrollbar-thin">

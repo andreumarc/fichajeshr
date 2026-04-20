@@ -10,6 +10,7 @@ import {
 import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
 import { useState, useEffect } from 'react';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
+import { GlobalFilters } from '@/components/layout/global-filters';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
 import clsx from 'clsx';
@@ -390,6 +391,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
           </div>
         </header>
+
+        {/* Global filter bar */}
+        <GlobalFilters />
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto scrollbar-thin">
