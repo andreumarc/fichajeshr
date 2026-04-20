@@ -1,52 +1,72 @@
-// GET /api/sync/clinics — proxies to NestJS backend for Hub import
-// POST /api/sync/clinics — proxies clinic upsert from Hub to backend
-// Auth: Bearer HUB_JWT_SECRET
+// GET  /api/sync/clinics — returns active work centers for Hub import
+// POST /api/sync/clinics — upserts work centers pushed from Hub
+// Auth: Bearer HUB_JWT_SECRET (fichaje reuses JWT_SECRET as HUB_JWT_SECRET in prod)
+// fichaje web == backend: runs on Vercel, uses Prisma directly against Supabase.
 import { type NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
 
-function backendUrl(): string | null {
-  const raw = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\\n$/, '')
-  if (!raw) return null
-  // NEXT_PUBLIC_API_URL already contains /api/v1 suffix
-  return raw.replace(/\/+$/, '')
+function assertAuth(request: NextRequest): boolean {
+  const auth = request.headers.get('authorization') ?? ''
+  const hubSecret = process.env.HUB_JWT_SECRET ?? process.env.JWT_SECRET ?? ''
+  if (!hubSecret) return false
+  return auth === `Bearer ${hubSecret}`
 }
 
 export async function GET(request: NextRequest) {
-  const auth = request.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.HUB_JWT_SECRET}`) {
+  if (!assertAuth(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const base = backendUrl()
-  if (!base) return NextResponse.json([], { status: 200 })
-  try {
-    const r = await fetch(`${base}/sync/clinics`, {
-      headers: { Authorization: auth },
-      signal: AbortSignal.timeout(6000),
-    })
-    if (!r.ok) return NextResponse.json([], { status: 200 })
-    return NextResponse.json(await r.json())
-  } catch {
-    return NextResponse.json([], { status: 200 })
-  }
+  const rows = await prisma.workCenter.findMany({
+    where: { isActive: true, deletedAt: null },
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  })
+  return NextResponse.json(rows.map((r) => ({ id: r.id, name: r.name, active: true })))
 }
 
 export async function POST(request: NextRequest) {
-  const auth = request.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.HUB_JWT_SECRET}`) {
+  if (!assertAuth(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const body = await request.text()
-  const base = backendUrl()
-  if (!base) return NextResponse.json({ ok: true, proxied: false })
-  try {
-    const r = await fetch(`${base}/sync/clinics`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: auth },
-      body,
-      signal: AbortSignal.timeout(6000),
-    })
-    const data = await r.json().catch(() => ({}))
-    return NextResponse.json(data, { status: r.status })
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 502 })
+  const body = (await request.json().catch(() => ({}))) as {
+    company_slug?: string
+    clinics?: { id: string; name: string; active?: boolean }[]
   }
+  if (!body.company_slug || !Array.isArray(body.clinics)) {
+    return NextResponse.json({ error: 'company_slug and clinics[] required' }, { status: 400 })
+  }
+
+  // fichaje has no Company.slug column — lookup by taxId (same pattern as /api/sync/company).
+  const company =
+    (await prisma.company.findUnique({ where: { taxId: body.company_slug } })) ??
+    (await prisma.company.findFirst({ where: { name: body.company_slug } }))
+
+  if (!company) {
+    return NextResponse.json({ error: 'company not found' }, { status: 404 })
+  }
+
+  let count = 0
+  for (const c of body.clinics) {
+    const active = c.active !== false
+    try {
+      await prisma.workCenter.upsert({
+        where: { id: c.id },
+        update: {
+          name: c.name,
+          isActive: active,
+          deletedAt: active ? null : new Date(),
+        },
+        create: {
+          id: c.id,
+          name: c.name,
+          companyId: company.id,
+          isActive: active,
+        },
+      })
+      count++
+    } catch {
+      /* non-fatal */
+    }
+  }
+  return NextResponse.json({ ok: true, count })
 }
