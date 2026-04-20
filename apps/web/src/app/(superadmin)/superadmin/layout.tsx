@@ -10,7 +10,7 @@ import {
   ChevronLeft, ChevronRight as ChevronRightIcon, UserCog,
   LayoutGrid, ExternalLink,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
 import clsx from 'clsx';
@@ -391,7 +391,9 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         </header>
 
         {/* Global filter bar */}
-        <GlobalFilters />
+        <Suspense fallback={null}>
+          <GlobalFilters />
+        </Suspense>
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto scrollbar-thin">

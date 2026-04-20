@@ -11,7 +11,7 @@ import {
   ChevronLeft, ChevronRight as ChevronRightIcon, LayoutGrid, ExternalLink,
 } from 'lucide-react';
 import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 import { GlobalFilters } from '@/components/layout/global-filters';
 import Cookies from 'js-cookie';
@@ -396,7 +396,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Global filter bar */}
-        <GlobalFilters />
+        <Suspense fallback={null}>
+          <GlobalFilters />
+        </Suspense>
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto scrollbar-thin">
