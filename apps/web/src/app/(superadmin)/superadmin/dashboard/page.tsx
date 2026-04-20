@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import {
   Building2,
@@ -291,15 +292,27 @@ export default function SuperAdminDashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
+  const searchParams = useSearchParams();
+  const dateFrom      = searchParams.get('date_from')       ?? '';
+  const dateTo        = searchParams.get('date_to')         ?? '';
+  const companyId     = searchParams.get('company_id')      ?? '';
+  const workCenterIds = searchParams.get('work_center_ids') ?? '';
+
+  const filterParams: Record<string, string> = {};
+  if (dateFrom)      filterParams.date_from       = dateFrom;
+  if (dateTo)        filterParams.date_to         = dateTo;
+  if (companyId)     filterParams.company_id      = companyId;
+  if (workCenterIds) filterParams.work_center_ids = workCenterIds;
+
   const { data: stats, isLoading: loadingStats } = useQuery<Stats>({
-    queryKey: ['superadmin-stats'],
-    queryFn: () => api.get('/superadmin/stats').then((r) => r.data),
+    queryKey: ['superadmin-stats', dateFrom, dateTo, companyId, workCenterIds],
+    queryFn: () => api.get('/superadmin/stats', { params: filterParams }).then((r) => r.data),
     refetchInterval: 30_000,
   });
 
   const { data: companies, isLoading: loadingCompanies } = useQuery<Company[]>({
-    queryKey: ['superadmin-companies'],
-    queryFn: () => api.get('/superadmin/companies').then((r) => r.data),
+    queryKey: ['superadmin-companies', companyId],
+    queryFn: () => api.get('/superadmin/companies', { params: companyId ? { company_id: companyId } : {} }).then((r) => r.data),
     refetchInterval: 30_000,
   });
 

@@ -1,5 +1,6 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import {
   Users, Clock, Coffee, AlertCircle, MapPinOff,
@@ -93,15 +94,27 @@ function EmployeeRow({ emp, variant }: { emp: any; variant: 'working' | 'break' 
 }
 
 export default function AdminDashboard() {
+  const searchParams = useSearchParams();
+  const dateFrom      = searchParams.get('date_from')       ?? '';
+  const dateTo        = searchParams.get('date_to')         ?? '';
+  const companyId     = searchParams.get('company_id')      ?? '';
+  const workCenterIds = searchParams.get('work_center_ids') ?? '';
+
+  const filterParams: Record<string, string> = {};
+  if (dateFrom)      filterParams.date_from       = dateFrom;
+  if (dateTo)        filterParams.date_to         = dateTo;
+  if (companyId)     filterParams.company_id      = companyId;
+  if (workCenterIds) filterParams.work_center_ids = workCenterIds;
+
   const { data: stats } = useQuery({
-    queryKey: ['dashboard-stats'],
-    queryFn: () => api.get('/reports/dashboard').then((r) => r.data),
+    queryKey: ['dashboard-stats', dateFrom, dateTo, companyId, workCenterIds],
+    queryFn: () => api.get('/reports/dashboard', { params: filterParams }).then((r) => r.data),
     refetchInterval: 30_000,
   });
 
   const { data: todayStatus } = useQuery({
-    queryKey: ['today-status'],
-    queryFn: () => api.get('/employees/today-status').then((r) => r.data),
+    queryKey: ['today-status', companyId, workCenterIds],
+    queryFn: () => api.get('/employees/today-status', { params: filterParams }).then((r) => r.data),
     refetchInterval: 30_000,
   });
 
