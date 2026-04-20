@@ -1,7 +1,6 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
+import { Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
@@ -97,6 +96,14 @@ function EmployeeRow({ emp, variant }: { emp: any; variant: 'working' | 'break' 
 }
 
 export default function AdminDashboard() {
+  return (
+    <Suspense fallback={null}>
+      <AdminDashboardInner />
+    </Suspense>
+  );
+}
+
+function AdminDashboardInner() {
   const searchParams = useSearchParams();
   const dateFrom      = searchParams.get('date_from')       ?? '';
   const dateTo        = searchParams.get('date_to')         ?? '';

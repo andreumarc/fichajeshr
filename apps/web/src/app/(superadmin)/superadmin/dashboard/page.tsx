@@ -1,8 +1,6 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
@@ -292,6 +290,14 @@ function CreateCompanyModal({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function SuperAdminDashboard() {
+  return (
+    <Suspense fallback={null}>
+      <SuperAdminDashboardInner />
+    </Suspense>
+  );
+}
+
+function SuperAdminDashboardInner() {
   const [modalOpen, setModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
