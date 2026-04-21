@@ -1,7 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import {
   Plus, Edit2, Trash2, Users, Clock, CalendarDays, X, AlertCircle, CheckCircle,
 } from 'lucide-react';
@@ -325,6 +326,15 @@ function AssignModal({ employee, schedules, onClose, onSaved }: { employee: Empl
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function SchedulesPage() {
+  return (
+    <Suspense fallback={null}>
+      <SchedulesPageInner />
+    </Suspense>
+  );
+}
+
+function SchedulesPageInner() {
+  const globalFilters = useGlobalFilters();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'templates' | 'assignments'>('templates');
   const [showModal, setShowModal] = useState(false);
@@ -333,13 +343,13 @@ export default function SchedulesPage() {
   const [confirmDelete, setConfirmDelete] = useState<WorkSchedule | undefined>();
 
   const { data: schedules = [], isLoading } = useQuery<WorkSchedule[]>({
-    queryKey: ['schedules'],
-    queryFn: () => api.get('/schedules').then((r) => r.data),
+    queryKey: ['schedules', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/schedules', { params: globalFilters.httpParams }).then((r) => r.data),
   });
 
   const { data: employees = [], isLoading: loadingEmps } = useQuery<Employee[]>({
-    queryKey: ['schedules-employees-overview'],
-    queryFn: () => api.get('/schedules/employees-overview').then((r) => r.data),
+    queryKey: ['schedules-employees-overview', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/schedules/employees-overview', { params: globalFilters.httpParams }).then((r) => r.data),
     enabled: tab === 'assignments',
   });
 

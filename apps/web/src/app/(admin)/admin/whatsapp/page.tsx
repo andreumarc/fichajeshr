@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import dayjs from 'dayjs';
 import { MessageSquare, ChevronRight, Phone, Clock, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 
@@ -21,17 +22,26 @@ const INTENT_LABELS: Record<string, string> = {
 };
 
 export default function WhatsAppPage() {
+  return (
+    <Suspense fallback={null}>
+      <WhatsAppPageInner />
+    </Suspense>
+  );
+}
+
+function WhatsAppPageInner() {
+  const globalFilters = useGlobalFilters();
   const [selected, setSelected] = useState<string | null>(null);
 
   const { data: conversations, isLoading } = useQuery({
-    queryKey: ['whatsapp-conversations'],
-    queryFn: () => api.get('/whatsapp/conversations').then((r) => r.data),
+    queryKey: ['whatsapp-conversations', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/whatsapp/conversations', { params: globalFilters.httpParams }).then((r) => r.data),
     refetchInterval: 15_000,
   });
 
   const { data: messages } = useQuery({
-    queryKey: ['whatsapp-messages', selected],
-    queryFn: () => api.get(`/whatsapp/conversations/${selected}/messages`).then((r) => r.data),
+    queryKey: ['whatsapp-messages', selected, ...globalFilters.queryKeyPart],
+    queryFn: () => api.get(`/whatsapp/conversations/${selected}/messages`, { params: globalFilters.httpParams }).then((r) => r.data),
     enabled: !!selected,
     refetchInterval: 5_000,
   });

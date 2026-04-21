@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import { ShieldCheck, ChevronLeft, ChevronRight, Loader2, Search, ChevronDown } from 'lucide-react';
 import dayjs from 'dayjs';
 
@@ -66,6 +67,15 @@ interface AuditResponse {
 }
 
 export default function SuperAdminAuditPage() {
+  return (
+    <Suspense fallback={null}>
+      <SuperAdminAuditPageInner />
+    </Suspense>
+  );
+}
+
+function SuperAdminAuditPageInner() {
+  const globalFilters = useGlobalFilters();
   const [filters, setFilters] = useState({
     action:     '',
     entityType: '',
@@ -76,10 +86,11 @@ export default function SuperAdminAuditPage() {
   });
 
   const { data, isLoading } = useQuery<AuditResponse>({
-    queryKey: ['superadmin-audit', filters],
+    queryKey: ['superadmin-audit', filters, ...globalFilters.queryKeyPart],
     queryFn: () =>
       api.get('/superadmin/audit', {
         params: {
+          ...globalFilters.httpParams,
           ...filters,
           action:     filters.action || undefined,
           entityType: filters.entityType || undefined,

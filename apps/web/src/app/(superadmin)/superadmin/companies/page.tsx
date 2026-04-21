@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import {
   Building2,
   Plus,
@@ -322,6 +323,15 @@ function CreateCompanyModal({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function CompaniesPage() {
+  return (
+    <Suspense fallback={null}>
+      <CompaniesPageInner />
+    </Suspense>
+  );
+}
+
+function CompaniesPageInner() {
+  const globalFilters = useGlobalFilters();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [createOpen, setCreateOpen] = useState(false);
@@ -332,8 +342,8 @@ export default function CompaniesPage() {
   const queryClient = useQueryClient();
 
   const { data: companies, isLoading } = useQuery<Company[]>({
-    queryKey: ['superadmin-companies'],
-    queryFn: () => api.get('/superadmin/companies').then((r) => r.data),
+    queryKey: ['superadmin-companies', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/superadmin/companies', { params: globalFilters.httpParams }).then((r) => r.data),
   });
 
   const deleteMutation = useMutation({

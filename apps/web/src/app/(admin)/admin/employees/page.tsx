@@ -1,7 +1,8 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import Cookies from 'js-cookie';
 import {
   Plus, Search, Key, QrCode, ChevronLeft, ChevronRight,
@@ -609,6 +610,15 @@ function ImportResultModal({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function EmployeesPage() {
+  return (
+    <Suspense fallback={null}>
+      <EmployeesPageInner />
+    </Suspense>
+  );
+}
+
+function EmployeesPageInner() {
+  const globalFilters = useGlobalFilters();
   const [search, setSearch]         = useState('');
   const [page, setPage]             = useState(1);
   const [modalOpen, setModalOpen]   = useState(false);
@@ -671,8 +681,8 @@ export default function EmployeesPage() {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ['employees', search, page],
-    queryFn: () => api.get('/employees', { params: { search, page, limit: 25 } }).then(r => r.data),
+    queryKey: ['employees', search, page, ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/employees', { params: { ...globalFilters.httpParams, search, page, limit: 25 } }).then(r => r.data),
   });
 
   const resetPasswordMutation = useMutation({

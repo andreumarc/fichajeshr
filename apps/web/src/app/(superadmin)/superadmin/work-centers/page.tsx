@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import {
   MapPin, Search, Loader2, Eye, CheckCircle2, XCircle, ChevronDown,
 } from 'lucide-react';
@@ -21,12 +22,21 @@ interface WorkCenter {
 }
 
 export default function WorkCentersPage() {
+  return (
+    <Suspense fallback={null}>
+      <WorkCentersPageInner />
+    </Suspense>
+  );
+}
+
+function WorkCentersPageInner() {
+  const globalFilters = useGlobalFilters();
   const [search, setSearch]   = useState('');
   const [filter, setFilter]   = useState<'all' | 'active' | 'inactive'>('all');
 
   const { data: centers, isLoading } = useQuery<WorkCenter[]>({
-    queryKey: ['superadmin-work-centers'],
-    queryFn: () => api.get('/superadmin/work-centers').then(r => r.data),
+    queryKey: ['superadmin-work-centers', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/superadmin/work-centers', { params: globalFilters.httpParams }).then(r => r.data),
   });
 
   const filtered = (centers ?? []).filter(c => {

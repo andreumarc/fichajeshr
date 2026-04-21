@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import {
   Clock,
   Search,
@@ -61,6 +62,15 @@ const LIMIT = 50;
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function TimeEntriesPage() {
+  return (
+    <Suspense fallback={null}>
+      <TimeEntriesPageInner />
+    </Suspense>
+  );
+}
+
+function TimeEntriesPageInner() {
+  const globalFilters = useGlobalFilters();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<TimeEntry | null>(null);
@@ -69,9 +79,9 @@ export default function TimeEntriesPage() {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery<TimeEntriesResponse>({
-    queryKey: ['superadmin-time-entries', page],
+    queryKey: ['superadmin-time-entries', page, ...globalFilters.queryKeyPart],
     queryFn: () =>
-      api.get(`/superadmin/time-entries?page=${page}&limit=${LIMIT}`).then((r) => r.data),
+      api.get(`/superadmin/time-entries?page=${page}&limit=${LIMIT}`, { params: globalFilters.httpParams }).then((r) => r.data),
     placeholderData: (prev) => prev,
   });
 

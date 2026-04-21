@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import dayjs from 'dayjs';
 import { Filter, Download, MapPin, MapPinOff, Edit2, Trash2, Loader2 } from 'lucide-react';
 
@@ -24,6 +25,15 @@ const statusBadge: Record<string, string> = {
 };
 
 export default function TimeEntriesPage() {
+  return (
+    <Suspense fallback={null}>
+      <TimeEntriesPageInner />
+    </Suspense>
+  );
+}
+
+function TimeEntriesPageInner() {
+  const globalFilters = useGlobalFilters();
   const qc = useQueryClient();
   const [filters, setFilters] = useState({
     from: dayjs().format('YYYY-MM-DD'),
@@ -35,11 +45,12 @@ export default function TimeEntriesPage() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['time-entries', filters],
+    queryKey: ['time-entries', filters, ...globalFilters.queryKeyPart],
     queryFn: () =>
       api
         .get('/time-entries', {
           params: {
+            ...globalFilters.httpParams,
             ...filters,
             from: `${filters.from}T00:00:00`,
             to: `${filters.to}T23:59:59`,

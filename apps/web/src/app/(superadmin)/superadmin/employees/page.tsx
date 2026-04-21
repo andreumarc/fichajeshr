@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import {
   Users,
   Search,
@@ -150,6 +151,15 @@ function ConfirmModal({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function EmployeesPage() {
+  return (
+    <Suspense fallback={null}>
+      <EmployeesPageInner />
+    </Suspense>
+  );
+}
+
+function EmployeesPageInner() {
+  const globalFilters = useGlobalFilters();
   const [search, setSearch] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
   const [deleteEntriesTarget, setDeleteEntriesTarget] = useState<Employee | null>(null);
@@ -159,8 +169,8 @@ export default function EmployeesPage() {
   const queryClient = useQueryClient();
 
   const { data: employees, isLoading } = useQuery<Employee[]>({
-    queryKey: ['superadmin-employees'],
-    queryFn: () => api.get('/superadmin/employees').then((r) => r.data),
+    queryKey: ['superadmin-employees', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/superadmin/employees', { params: globalFilters.httpParams }).then((r) => r.data),
   });
 
   const deleteEmployeeMutation = useMutation({

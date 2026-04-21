@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import {
   UserCog, Search, Loader2, ChevronDown, RotateCcw, ToggleLeft, ToggleRight,
   Copy, Check, Key, X,
@@ -98,14 +99,23 @@ function TempPasswordModal({ name, email, password, onClose }: {
 
 /* ── Main Page ───────────────────────────────────────────────── */
 export default function UsersPage() {
+  return (
+    <Suspense fallback={null}>
+      <UsersPageInner />
+    </Suspense>
+  );
+}
+
+function UsersPageInner() {
+  const globalFilters = useGlobalFilters();
   const [search, setSearch]   = useState('');
   const [roleFilter, setRole] = useState('');
   const [tempPwd, setTempPwd] = useState<{ name: string; email: string; password: string } | null>(null);
   const queryClient = useQueryClient();
 
   const { data: users, isLoading } = useQuery<User[]>({
-    queryKey: ['superadmin-users'],
-    queryFn: () => api.get('/superadmin/users').then(r => r.data),
+    queryKey: ['superadmin-users', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/superadmin/users', { params: globalFilters.httpParams }).then(r => r.data),
   });
 
   const toggleMutation = useMutation({

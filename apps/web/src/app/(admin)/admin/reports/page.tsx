@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import {
@@ -12,6 +13,15 @@ import {
 dayjs.locale('es');
 
 export default function ReportsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ReportsPageInner />
+    </Suspense>
+  );
+}
+
+function ReportsPageInner() {
+  const globalFilters = useGlobalFilters();
   const now = dayjs();
   const [year, setYear]  = useState(now.year());
   const [month, setMonth] = useState(now.month() + 1);
@@ -19,15 +29,15 @@ export default function ReportsPage() {
   const [exportLoading, setExportLoading] = useState(false);
 
   const { data: employees } = useQuery({
-    queryKey: ['employees-select'],
-    queryFn: () => api.get('/employees', { params: { limit: 200 } }).then((r) => r.data.data),
+    queryKey: ['employees-select', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/employees', { params: { ...globalFilters.httpParams, limit: 200 } }).then((r) => r.data.data),
   });
 
   const { data: report, isLoading } = useQuery({
-    queryKey: ['monthly-report', year, month, selectedEmp],
+    queryKey: ['monthly-report', year, month, selectedEmp, ...globalFilters.queryKeyPart],
     queryFn: () =>
       api.get('/reports/monthly-summary', {
-        params: { year, month, employeeId: selectedEmp || undefined },
+        params: { ...globalFilters.httpParams, year, month, employeeId: selectedEmp || undefined },
       }).then((r) => r.data),
   });
 

@@ -1,7 +1,8 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import {
   Plus, X, AlertCircle, CheckCircle, XCircle, ChevronLeft, ChevronRight,
   Calendar, User, FileText, Clock, Trash2, Loader2,
@@ -274,6 +275,15 @@ function CalendarTab({ requests }: { requests: LeaveRequest[] }) {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function LeaveRequestsAdminPage() {
+  return (
+    <Suspense fallback={null}>
+      <LeaveRequestsAdminPageInner />
+    </Suspense>
+  );
+}
+
+function LeaveRequestsAdminPageInner() {
+  const globalFilters = useGlobalFilters();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'requests' | 'sick' | 'calendar'>('requests');
   const [statusFilter, setStatusFilter] = useState<LeaveStatus | 'ALL'>('ALL');
@@ -284,19 +294,19 @@ export default function LeaveRequestsAdminPage() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const { data: stats } = useQuery({
-    queryKey: ['leave-stats'],
-    queryFn: () => api.get('/leave-requests/stats').then((r) => r.data),
+    queryKey: ['leave-stats', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/leave-requests/stats', { params: globalFilters.httpParams }).then((r) => r.data),
     refetchInterval: 30_000,
   });
 
   const { data: requests = [], isLoading } = useQuery<LeaveRequest[]>({
-    queryKey: ['leave-requests-all'],
-    queryFn: () => api.get('/leave-requests').then((r) => r.data),
+    queryKey: ['leave-requests-all', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/leave-requests', { params: globalFilters.httpParams }).then((r) => r.data),
   });
 
   const { data: employees = [] } = useQuery<EmployeeOption[]>({
-    queryKey: ['employees-list'],
-    queryFn: () => api.get('/employees').then((r) => r.data?.data ?? r.data),
+    queryKey: ['employees-list', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/employees', { params: globalFilters.httpParams }).then((r) => r.data?.data ?? r.data),
     enabled: showSickModal,
   });
 

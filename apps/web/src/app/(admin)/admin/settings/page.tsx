@@ -1,7 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import {
   Settings, Save, Loader2, Building2, MessageSquare,
   MapPin, Bell, Shield, Check, Globe,
@@ -59,12 +60,21 @@ function ToggleField({
 }
 
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SettingsPageInner />
+    </Suspense>
+  );
+}
+
+function SettingsPageInner() {
+  const globalFilters = useGlobalFilters();
   const qc = useQueryClient();
   const [saved, setSaved] = useState(false);
 
   const { data: company, isLoading } = useQuery({
-    queryKey: ['company-settings'],
-    queryFn: () => api.get('/companies/me').then((r) => r.data),
+    queryKey: ['company-settings', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/companies/me', { params: globalFilters.httpParams }).then((r) => r.data),
   });
 
   const [form, setForm] = useState<CompanySettings>({

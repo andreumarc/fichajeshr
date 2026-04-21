@@ -181,7 +181,7 @@ export function GlobalFilters() {
       </div>
 
       {/* Empresa — superadmin only */}
-      {role === 'SUPERADMIN' && companies.length > 1 && (
+      {role === 'SUPERADMIN' && companies.length > 0 && (
         <>
           <div className="w-px h-4 bg-gray-200 shrink-0 hidden sm:block" />
           <div className="flex items-center gap-1.5">

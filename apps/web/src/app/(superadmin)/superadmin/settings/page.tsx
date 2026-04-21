@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import {
   Settings2, Shield, Globe, Bell, Database, Zap,
   CheckCircle2, Info, Server, Clock, Users, Building2,
@@ -45,9 +46,18 @@ function Toggle({ enabled, label }: { enabled: boolean; label: string }) {
 }
 
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SettingsPageInner />
+    </Suspense>
+  );
+}
+
+function SettingsPageInner() {
+  const globalFilters = useGlobalFilters();
   const { data: stats } = useQuery({
-    queryKey: ['superadmin-stats'],
-    queryFn: () => api.get('/superadmin/stats').then(r => r.data),
+    queryKey: ['superadmin-stats', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/superadmin/stats', { params: globalFilters.httpParams }).then(r => r.data),
   });
 
   return (

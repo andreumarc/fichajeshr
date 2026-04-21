@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import dayjs from 'dayjs';
 import { ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 
 const ACTION_BADGE: Record<string, string> = {
   LOGIN: 'badge-green',
@@ -34,6 +35,15 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 export default function AuditPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuditPageInner />
+    </Suspense>
+  );
+}
+
+function AuditPageInner() {
+  const globalFilters = useGlobalFilters();
   const [filters, setFilters] = useState({
     action: '',
     entityType: '',
@@ -44,10 +54,11 @@ export default function AuditPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['audit-logs', filters],
+    queryKey: ['audit-logs', filters, ...globalFilters.queryKeyPart],
     queryFn: () =>
       api.get('/audit', {
         params: {
+          ...globalFilters.httpParams,
           ...filters,
           action: filters.action || undefined,
           entityType: filters.entityType || undefined,

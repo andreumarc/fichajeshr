@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import dayjs from 'dayjs';
 import {
   AlertCircle, CheckCircle2, Clock3, XCircle, ChevronLeft,
@@ -27,6 +28,15 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function AdminIncidentsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminIncidentsPageInner />
+    </Suspense>
+  );
+}
+
+function AdminIncidentsPageInner() {
+  const globalFilters = useGlobalFilters();
   const [filters, setFilters] = useState({
     status: '' as any,
     from: dayjs().startOf('month').format('YYYY-MM-DD'),
@@ -41,10 +51,11 @@ export default function AdminIncidentsPage() {
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['incidents-admin', filters],
+    queryKey: ['incidents-admin', filters, ...globalFilters.queryKeyPart],
     queryFn: () =>
       api.get('/incidents', {
         params: {
+          ...globalFilters.httpParams,
           ...filters,
           status: filters.status || undefined,
           from: `${filters.from}T00:00:00`,
@@ -54,8 +65,8 @@ export default function AdminIncidentsPage() {
   });
 
   const { data: summary } = useQuery({
-    queryKey: ['incidents-summary'],
-    queryFn: () => api.get('/incidents/summary').then((r) => r.data),
+    queryKey: ['incidents-summary', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/incidents/summary', { params: globalFilters.httpParams }).then((r) => r.data),
     refetchInterval: 30_000,
   });
 

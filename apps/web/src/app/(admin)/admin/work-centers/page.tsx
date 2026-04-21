@@ -1,7 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useGlobalFilters } from '@/hooks/useGlobalFilters';
 import Cookies from 'js-cookie';
 import {
   Plus, Building2, MapPin, Users, Edit2, ToggleLeft,
@@ -28,6 +29,15 @@ const EMPTY_FORM: WorkCenterForm = {
 };
 
 export default function WorkCentersPage() {
+  return (
+    <Suspense fallback={null}>
+      <WorkCentersPageInner />
+    </Suspense>
+  );
+}
+
+function WorkCentersPageInner() {
+  const globalFilters = useGlobalFilters();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing]     = useState<any>(null);
   const [form, setForm]           = useState<WorkCenterForm>(EMPTY_FORM);
@@ -60,8 +70,8 @@ export default function WorkCentersPage() {
   };
 
   const { data: centers, isLoading } = useQuery({
-    queryKey: ['work-centers'],
-    queryFn: () => api.get('/work-centers').then((r) => r.data),
+    queryKey: ['work-centers', ...globalFilters.queryKeyPart],
+    queryFn: () => api.get('/work-centers', { params: globalFilters.httpParams }).then((r) => r.data),
   });
 
   const saveMutation = useMutation({
