@@ -10,13 +10,18 @@ import * as crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 
 const ROLE_MAP: Record<string, UserRole> = {
-  superadmin: UserRole.SUPERADMIN,
-  company_admin: UserRole.COMPANY_ADMIN,
-  admin: UserRole.COMPANY_ADMIN,
-  hr: UserRole.HR,
-  manager: UserRole.MANAGER,
-  employee: UserRole.EMPLOYEE,
-  kiosk: UserRole.KIOSK,
+  superadmin:        UserRole.SUPERADMIN,
+  admin:             UserRole.ADMIN,
+  company_admin:     UserRole.ADMIN,
+  direccion_general: UserRole.DIRECCION_GENERAL,
+  direccion_clinica: UserRole.DIRECCION_CLINICA,
+  hr:                UserRole.RRHH,
+  rrhh:              UserRole.RRHH,
+  manager:           UserRole.DIRECCION_CLINICA,
+  odontologo:        UserRole.ODONTOLOGO,
+  auxiliar:          UserRole.AUXILIAR,
+  employee:          UserRole.AUXILIAR,
+  kiosk:             UserRole.KIOSK,
 }
 
 export async function GET(req: NextRequest) {
@@ -43,7 +48,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: 'Token inválido o expirado' }, { status: 401 })
   }
 
-  const role: UserRole = ROLE_MAP[appRole.toLowerCase()] ?? UserRole.EMPLOYEE
+  const role: UserRole = ROLE_MAP[appRole.toLowerCase()] ?? UserRole.AUXILIAR
   const parts = name.trim().split(' ')
   const firstName = parts[0] ?? ''
   const lastName = parts.slice(1).join(' ')

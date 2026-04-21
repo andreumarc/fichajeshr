@@ -7,12 +7,14 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const ROLE_MAP: Record<string, string> = {
-  SUPERADMIN:    'superadmin',
-  COMPANY_ADMIN: 'admin',
-  HR:            'rrhh',
-  MANAGER:       'dirección',
-  EMPLOYEE:      'empleado',
-  KIOSK:         'empleado',
+  SUPERADMIN:        'superadmin',
+  ADMIN:             'admin',
+  DIRECCION_GENERAL: 'direccion_general',
+  DIRECCION_CLINICA: 'direccion_clinica',
+  RRHH:              'rrhh',
+  ODONTOLOGO:        'odontologo',
+  AUXILIAR:          'auxiliar',
+  KIOSK:             'kiosk',
 }
 
 function slugify(s: string): string {
@@ -53,7 +55,7 @@ export async function GET(req: NextRequest) {
       return {
         email:        u.email.toLowerCase(),
         name,
-        role:         ROLE_MAP[u.role] ?? 'empleado',
+        role:         ROLE_MAP[u.role] ?? 'auxiliar',
         company_slug: slug,
         active:       u.isActive,
       }
