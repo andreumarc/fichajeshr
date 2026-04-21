@@ -152,27 +152,32 @@ function WorkCentersPageInner() {
     });
   };
 
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  const filteredCenters = (centers ?? []).filter((c: any) => {
+    if (statusFilter === 'active')   return c.isActive;
+    if (statusFilter === 'inactive') return !c.isActive;
+    return true;
+  });
+
+  const activeCount   = (centers ?? []).filter((c: any) => c.isActive).length;
+  const inactiveCount = (centers ?? []).filter((c: any) => !c.isActive).length;
+
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Centros de trabajo</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Centros de trabajo</h1>
           {centers && (
-            <p className="text-sm text-slate-500 mt-0.5">
-              {centers.length === 1
-                ? '1 centro de trabajo'
-                : `${centers.length} centros de trabajo`}
+            <p className="text-sm text-gray-500 mt-0.5">
+              {centers.length === 1 ? '1 centro de trabajo' : `${centers.length} centros de trabajo`}
               {isReadOnly && <span className="ml-2 text-amber-600 font-medium">Solo lectura</span>}
             </p>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleExport}
-            className="btn-secondary text-sm gap-1.5"
-            title="Exportar"
-          >
+          <button onClick={handleExport} className="btn-secondary text-sm gap-1.5" title="Exportar">
             <Download size={14} /> Exportar
           </button>
           {!isReadOnly && (
@@ -183,120 +188,164 @@ function WorkCentersPageInner() {
         </div>
       </div>
 
-      {/* Grid */}
-      {isLoading ? (
-        <div className="card text-center py-16 text-slate-400">
-          <Loader2 className="animate-spin mx-auto mb-2" size={20} /> Cargando...
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {(centers ?? []).map((center: any) => (
-            <div
-              key={center.id}
-              className={`card transition-all hover:shadow-md ${!center.isActive ? 'opacity-60' : ''}`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  {!isReadOnly && (
-                    <input
-                      type="checkbox"
-                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer flex-shrink-0"
-                      checked={selected.has(center.id)}
-                      onChange={e => {
-                        const next = new Set(selected);
-                        if (e.target.checked) next.add(center.id);
-                        else next.delete(center.id);
-                        setSelected(next);
-                      }}
-                    />
-                  )}
-                  <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center">
-                    <Building2 size={18} className="text-violet-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900 text-sm leading-tight">
-                      {center.name}
-                    </h3>
-                    {center.code && (
-                      <span className="text-xs font-mono text-slate-400">{center.code}</span>
-                    )}
-                  </div>
-                </div>
-                {!isReadOnly && (
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => openEdit(center)}
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button
-                      onClick={() => toggleMutation.mutate({ id: center.id, isActive: center.isActive })}
-                      className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                    >
-                      {center.isActive
-                        ? <ToggleRight size={16} className="text-emerald-500" />
-                        : <ToggleLeft size={16} />
-                      }
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                {center.city && (
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <MapPin size={12} className="flex-shrink-0" />
-                    {center.address ? `${center.address}, ` : ''}{center.city}
-                  </div>
-                )}
-                {center.latitude && (
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <span className="font-medium">GPS:</span>
-                    {center.latitude.toFixed(6)}, {center.longitude?.toFixed(6)}
-                    <span className="ml-auto text-indigo-600 font-medium">r={center.radiusMeters}m</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-50">
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <Users size={13} />
-                  <span>{center._count?.employees ?? 0} empleados</span>
-                </div>
-                <div className="flex gap-1">
-                  {center.requireGps && <span className="badge-blue">GPS</span>}
-                  {center.allowRemote && <span className="badge-purple">Remoto</span>}
-                  <span className={center.isActive ? 'badge-green' : 'badge-gray'}>
-                    {center.isActive ? 'Activo' : 'Inactivo'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Bulk action bar — solo para roles con permisos de escritura */}
-      {selected.size > 0 && !isReadOnly && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 bg-brand-800 text-white px-5 py-3 rounded-2xl shadow-2xl shadow-brand-900/40">
-          <span className="text-sm font-semibold">
-            {selected.size} {selected.size === 1 ? 'seleccionado' : 'seleccionados'}
-          </span>
-          <div className="w-px h-5 bg-white/20" />
+      {/* Tabs + bulk delete */}
+      <div className="flex gap-2 mb-5 flex-wrap items-center">
+        {([
+          { key: 'all',      label: 'Todos',    count: centers?.length ?? 0 },
+          { key: 'active',   label: 'Activos',  count: activeCount },
+          { key: 'inactive', label: 'Inactivos', count: inactiveCount },
+        ] as const).map(tab => (
           <button
-            onClick={() => setSelected(new Set())}
-            className="text-sm text-white/70 hover:text-white transition-colors"
+            key={tab.key}
+            onClick={() => setStatusFilter(tab.key)}
+            className={
+              statusFilter === tab.key
+                ? 'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-brand-500 text-white'
+                : 'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-white border border-gray-200 text-gray-600 hover:border-brand-300'
+            }
           >
-            Deseleccionar todo
+            {tab.label}
+            <span className={statusFilter === tab.key
+              ? 'text-xs px-1.5 py-0.5 rounded-md font-bold bg-white/20 text-white'
+              : 'text-xs px-1.5 py-0.5 rounded-md font-bold bg-gray-100 text-gray-500'
+            }>{tab.count}</span>
           </button>
+        ))}
+        {selected.size > 0 && !isReadOnly && (
           <button
             onClick={handleBulkDelete}
             disabled={bulkDeleting}
-            className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-1.5 rounded-xl transition-colors disabled:opacity-60"
+            className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-60"
           >
-            {bulkDeleting ? <><Loader2 size={13} className="animate-spin" />Eliminando...</> : <><Trash2 size={13} />Eliminar {selected.size}</>}
+            {bulkDeleting
+              ? <><Loader2 size={13} className="animate-spin" />Eliminando...</>
+              : <><Trash2 size={13} />Eliminar {selected.size}</>
+            }
           </button>
+        )}
+      </div>
+
+      {/* Table */}
+      {isLoading ? (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-card text-center py-16 text-gray-400">
+          <Loader2 className="animate-spin mx-auto mb-2" size={20} /> Cargando...
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[640px]">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/60">
+                  {!isReadOnly && (
+                    <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 w-10">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                        checked={filteredCenters.length > 0 && selected.size === filteredCenters.length}
+                        onChange={e => {
+                          if (e.target.checked) setSelected(new Set(filteredCenters.map((c: any) => c.id)));
+                          else setSelected(new Set());
+                        }}
+                      />
+                    </th>
+                  )}
+                  <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Centro</th>
+                  <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Ubicación</th>
+                  <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Empleados</th>
+                  <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Opciones</th>
+                  <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Estado</th>
+                  {!isReadOnly && <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Acciones</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filteredCenters.length === 0 ? (
+                  <tr>
+                    <td colSpan={isReadOnly ? 5 : 7} className="text-center py-16 text-gray-400">
+                      <Building2 size={36} className="mx-auto mb-2 text-gray-200" />
+                      No hay centros de trabajo
+                    </td>
+                  </tr>
+                ) : (
+                  filteredCenters.map((center: any) => (
+                    <tr key={center.id} className="hover:bg-gray-50/60 transition-colors">
+                      {!isReadOnly && (
+                        <td className="px-4 py-3 w-10">
+                          <input
+                            type="checkbox"
+                            className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                            checked={selected.has(center.id)}
+                            onChange={e => {
+                              const next = new Set(selected);
+                              if (e.target.checked) next.add(center.id);
+                              else next.delete(center.id);
+                              setSelected(next);
+                            }}
+                          />
+                        </td>
+                      )}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 bg-violet-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <Building2 size={16} className="text-violet-600" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900 text-sm">{center.name}</p>
+                            {center.code && <span className="text-xs font-mono text-gray-400">{center.code}</span>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {center.city
+                          ? <div className="flex items-center gap-1.5"><MapPin size={12} className="text-gray-400 flex-shrink-0" />{center.address ? `${center.address}, ` : ''}{center.city}</div>
+                          : <span className="text-gray-300">—</span>
+                        }
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                          <Users size={13} className="text-gray-400" />
+                          {center._count?.employees ?? 0}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1">
+                          {center.requireGps && <span className="badge-blue">GPS</span>}
+                          {center.allowRemote && <span className="badge-purple">Remoto</span>}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={center.isActive ? 'badge-green' : 'badge-gray'}>
+                          {center.isActive ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      {!isReadOnly && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => openEdit(center)}
+                              className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                              title="Editar"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              onClick={() => toggleMutation.mutate({ id: center.id, isActive: center.isActive })}
+                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                              title={center.isActive ? 'Desactivar' : 'Activar'}
+                            >
+                              {center.isActive
+                                ? <ToggleRight size={16} className="text-emerald-500" />
+                                : <ToggleLeft size={16} />
+                              }
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

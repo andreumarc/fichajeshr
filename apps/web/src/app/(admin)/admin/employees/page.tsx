@@ -750,8 +750,8 @@ function EmployeesPageInner() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Empleados</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-gray-900">Empleados</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
             {data ? `${data.total} empleados` : 'Cargando...'}
           </p>
         </div>
@@ -806,28 +806,42 @@ function EmployeesPageInner() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Buscar por nombre, código o email..."
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="input pl-10 text-sm"
-        />
+      {/* Tabs + search + bulk delete */}
+      <div className="flex gap-2 mb-5 flex-wrap items-center">
+        <div className="relative min-w-[220px] max-w-xs">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar por nombre, código o email..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+          />
+        </div>
+        {selected.size > 0 && (
+          <button
+            onClick={handleBulkDelete}
+            disabled={bulkDeleting}
+            className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-60"
+          >
+            {bulkDeleting
+              ? <><Loader2 size={13} className="animate-spin" />Eliminando...</>
+              : <><Trash2 size={13} />Eliminar {selected.size}</>
+            }
+          </button>
+        )}
       </div>
 
       {/* Table */}
-      <div className="card p-0 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[700px]">
             <thead>
-              <tr className="border-b border-slate-100">
-                <th className="table-header w-10">
+              <tr className="border-b border-gray-100 bg-gray-50/60">
+                <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 w-10">
                   <input
                     type="checkbox"
-                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                    className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
                     checked={(data?.data?.length ?? 0) > 0 && selected.size === (data?.data?.length ?? 0)}
                     onChange={e => {
                       if (e.target.checked) setSelected(new Set((data?.data ?? []).map((i: any) => i.id)));
@@ -835,19 +849,19 @@ function EmployeesPageInner() {
                     }}
                   />
                 </th>
-                <th className="table-header">Empleados</th>
-                <th className="table-header">Código</th>
-                <th className="table-header">Departamento</th>
-                <th className="table-header">Centro de trabajo</th>
-                <th className="table-header">Estado</th>
-                <th className="table-header">Acceso</th>
-                <th className="table-header w-24">Acciones</th>
+                <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Empleado</th>
+                <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Código</th>
+                <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Departamento</th>
+                <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Centro de trabajo</th>
+                <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Estado</th>
+                <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 text-left">Acceso</th>
+                <th className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 w-24 text-left">Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-slate-400">
+                  <td colSpan={8} className="text-center py-16 text-gray-400">
                     <Loader2 className="animate-spin mx-auto mb-2" size={20} />
                     Cargando...
                   </td>
@@ -856,11 +870,11 @@ function EmployeesPageInner() {
                 <tr>
                   <td colSpan={8} className="py-20">
                     <div className="text-center">
-                      <Users size={40} className="text-slate-200 mx-auto mb-3" />
-                      <p className="text-slate-400 text-sm">Sin datos</p>
+                      <Users size={40} className="text-gray-200 mx-auto mb-3" />
+                      <p className="text-gray-400 text-sm">Sin datos</p>
                       <button
                         onClick={() => setModalOpen(true)}
-                        className="mt-3 text-accent-600 text-xs font-semibold hover:underline"
+                        className="mt-3 text-brand-600 text-xs font-semibold hover:underline"
                       >
                         Nuevo empleado
                       </button>
@@ -869,11 +883,11 @@ function EmployeesPageInner() {
                 </tr>
               ) : (
                 data?.data?.map((emp: any) => (
-                  <tr key={emp.id} className="border-b border-slate-50 hover:bg-slate-50/70 transition-colors">
-                    <td className="table-cell w-10">
+                  <tr key={emp.id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="px-4 py-3 w-10">
                       <input
                         type="checkbox"
-                        className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                        className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
                         checked={selected.has(emp.id)}
                         onChange={e => {
                           const next = new Set(selected);
@@ -883,42 +897,42 @@ function EmployeesPageInner() {
                         }}
                       />
                     </td>
-                    <td className="table-cell">
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar name={`${emp.firstName} ${emp.lastName}`} />
                         <div className="min-w-0">
-                          <p className="font-semibold text-slate-900 truncate">
+                          <p className="font-semibold text-gray-900 truncate">
                             {emp.firstName} {emp.lastName}
                           </p>
-                          <p className="text-xs text-slate-400 truncate">{emp.email ?? '—'}</p>
+                          <p className="text-xs text-gray-400 truncate">{emp.email ?? '—'}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="table-cell">
-                      <span className="font-mono text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-lg">
+                    <td className="px-4 py-3">
+                      <span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">
                         {emp.employeeCode}
                       </span>
                     </td>
-                    <td className="table-cell text-slate-600">{emp.department ?? '—'}</td>
-                    <td className="table-cell text-slate-600">{emp.workCenter?.name ?? '—'}</td>
-                    <td className="table-cell">
+                    <td className="px-4 py-3 text-gray-600 text-sm">{emp.department ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-600 text-sm">{emp.workCenter?.name ?? '—'}</td>
+                    <td className="px-4 py-3">
                       <span className={emp.status === 'ACTIVE' ? 'badge-green' : 'badge-gray'}>
                         {emp.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="table-cell">
+                    <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {emp.allowMobile && <span className="badge-blue">Móvil</span>}
                         {emp.allowWeb    && <span className="badge-blue">Web</span>}
                         {emp.allowKiosk  && <span className="badge-gray">Kiosco</span>}
                       </div>
                     </td>
-                    <td className="table-cell">
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <button
                           title="Editar"
                           onClick={() => setEditEmp(emp)}
-                          className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                         >
                           <Edit2 size={14} />
                         </button>
@@ -926,7 +940,7 @@ function EmployeesPageInner() {
                           title="Resetear contraseña"
                           onClick={() => resetPasswordMutation.mutate(emp)}
                           disabled={resetPasswordMutation.isPending}
-                          className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                         >
                           <RotateCcw size={14} />
                         </button>
@@ -936,21 +950,21 @@ function EmployeesPageInner() {
                             const pin = prompt('Nuevo PIN (4-8 dígitos):');
                             if (pin && pin.length >= 4) resetPin.mutate({ id: emp.id, pin });
                           }}
-                          className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                         >
                           <Key size={14} />
                         </button>
                         <button
                           title="Generar QR"
                           onClick={() => generateQr.mutate(emp.id)}
-                          className="p-2 text-slate-400 hover:text-accent-600 hover:bg-accent-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                         >
                           <QrCode size={14} />
                         </button>
                         <button
                           title="Eliminar"
                           onClick={() => setDeleteEmp(emp)}
-                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -965,8 +979,8 @@ function EmployeesPageInner() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/50">
-            <p className="text-sm text-slate-500">
+          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+            <p className="text-sm text-gray-500">
               Página {page} de {totalPages} · {data?.total} empleados
             </p>
             <div className="flex items-center gap-2">
@@ -980,29 +994,6 @@ function EmployeesPageInner() {
           </div>
         )}
       </div>
-
-      {/* Bulk action bar */}
-      {selected.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 bg-brand-800 text-white px-5 py-3 rounded-2xl shadow-2xl shadow-brand-900/40">
-          <span className="text-sm font-semibold">
-            {selected.size} {selected.size === 1 ? 'seleccionado' : 'seleccionados'}
-          </span>
-          <div className="w-px h-5 bg-white/20" />
-          <button
-            onClick={() => setSelected(new Set())}
-            className="text-sm text-white/70 hover:text-white transition-colors"
-          >
-            Deseleccionar todo
-          </button>
-          <button
-            onClick={handleBulkDelete}
-            disabled={bulkDeleting}
-            className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-1.5 rounded-xl transition-colors disabled:opacity-60"
-          >
-            {bulkDeleting ? <><Loader2 size={13} className="animate-spin" />Eliminando...</> : <><Trash2 size={13} />Eliminar {selected.size}</>}
-          </button>
-        </div>
-      )}
 
       {/* Import result modal */}
       {importResult && (
