@@ -9,6 +9,7 @@ import {
   Settings, LogOut, ShieldCheck, ChevronRight, MessageSquare,
   CalendarDays, CalendarOff, Lock, Bell, Menu,
   ChevronLeft, ChevronRight as ChevronRightIcon, LayoutGrid, ExternalLink,
+  UserCircle,
 } from 'lucide-react';
 import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
 import { useState, useEffect, Suspense } from 'react';
@@ -68,11 +69,17 @@ const NAV_GROUPS = [
     ],
   },
   {
+    key: 'gestion',
+    label: 'GESTIÓN',
+    items: [
+      { href: '/admin/employees',    label: 'Empleados',          icon: Users,     roles: undefined },
+      { href: '/admin/work-centers', label: 'Centros de trabajo', icon: Building2, roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
+    ],
+  },
+  {
     key: 'admin',
     label: 'ADMINISTRACIÓN',
     items: [
-      { href: '/admin/employees',      label: 'Empleados',           icon: Users,         roles: undefined },
-      { href: '/admin/work-centers',   label: 'Centros de trabajo',  icon: Building2,     roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
       { href: '/admin/leave-requests', label: 'Ausencias',           icon: CalendarOff,   roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
       { href: '/admin/incidents',      label: 'Incidencias',         icon: FileText,      roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
       { href: '/admin/reports',        label: 'Informes',            icon: BarChart3,     roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
@@ -83,8 +90,9 @@ const NAV_GROUPS = [
     key: 'system',
     label: 'SISTEMA',
     items: [
-      { href: '/admin/audit',    label: 'Auditoría',     icon: ShieldCheck, roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
-      { href: '/admin/settings', label: 'Configuración', icon: Settings,    roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/audit',    label: 'Auditoría',     icon: ShieldCheck,  roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/settings', label: 'Configuración', icon: Settings,     roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/account',  label: 'Mi perfil',     icon: UserCircle,   roles: undefined },
     ],
   },
 ];
