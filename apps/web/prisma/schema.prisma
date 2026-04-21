@@ -282,7 +282,7 @@ model User {
   passwordHash String
   firstName    String
   lastName     String
-  role         UserRole   @default(EMPLOYEE)
+  role         UserRole   @default(AUXILIAR)
   isActive     Boolean    @default(true)
   lastLogin    DateTime?
   loginAttempts Int       @default(0)
