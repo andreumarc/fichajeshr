@@ -133,7 +133,7 @@ function AdminDashboardInner() {
   const absent  = todayStatus?.filter((e: any) => e.status === 'NOT_CLOCKED_IN') ?? [];
 
   const statCards: StatCardProps[] = [
-    { icon: Users,      label: 'Total empleados',    value: stats?.totalEmployees, color: 'navy',   href: '/admin/employees' },
+    { icon: Users,      label: 'Total empleados',    value: stats?.totalEmployees, color: 'navy' },
     { icon: UserCheck,  label: 'Trabajando ahora',   value: stats?.clockedInNow,   color: 'teal' },
     { icon: Coffee,     label: 'En pausa',            value: stats?.onBreakNow,     color: 'amber' },
     { icon: UserX,      label: 'Sin fichar',          value: stats?.notClockedIn,   color: 'slate' },
@@ -225,7 +225,6 @@ function AdminDashboardInner() {
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Acceso rápido</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'Empleados',         href: '/admin/employees',    icon: Users,    color: 'text-brand-600',  bg: 'hover:bg-brand-50' },
             { label: 'Fichajes',          href: '/admin/time-entries', icon: Clock,    color: 'text-accent-600',   bg: 'hover:bg-accent-50' },
             { label: 'Centros de trabajo',href: '/admin/work-centers', icon: Building2,color: 'text-violet-600', bg: 'hover:bg-violet-50' },
             { label: 'Informes',          href: '/admin/reports',      icon: BarChart3,color: 'text-sky-600',    bg: 'hover:bg-sky-50' },

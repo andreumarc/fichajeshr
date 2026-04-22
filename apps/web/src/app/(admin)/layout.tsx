@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard, Users, Clock, Building2, BarChart3, FileText,
+  LayoutDashboard, Clock, Building2, BarChart3, FileText,
   Settings, LogOut, ShieldCheck, ChevronRight, MessageSquare,
   CalendarDays, CalendarOff, Lock, Bell, Menu,
   ChevronLeft, ChevronRight as ChevronRightIcon, LayoutGrid, ExternalLink,
@@ -72,7 +72,6 @@ const NAV_GROUPS = [
     key: 'gestion',
     label: 'GESTIÓN',
     items: [
-      { href: '/admin/employees',    label: 'Empleados',          icon: Users,     roles: undefined },
       { href: '/admin/work-centers', label: 'Centros de trabajo', icon: Building2, roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
     ],
   },
