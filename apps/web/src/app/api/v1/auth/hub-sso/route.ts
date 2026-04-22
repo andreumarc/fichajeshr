@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: 'hub_token requerido' }, { status: 400 })
   }
 
-  const secret = process.env.HUB_JWT_SECRET
+  const secret = process.env.HUB_JWT_SECRET ?? process.env.JWT_SECRET
   if (!secret) {
     return NextResponse.json({ message: 'SSO no configurado' }, { status: 500 })
   }
