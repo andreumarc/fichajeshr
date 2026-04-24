@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { requireAuth } from '@/lib/api-auth';
+import { requirePermission } from '@/lib/api-auth';
+import { getActiveClinicId } from '@/lib/active-clinic';
 import { auditLog } from '@/lib/audit';
 import * as bcrypt from 'bcryptjs';
 import { AuditAction, EmployeeStatus, ClockMethod, UserRole } from '@prisma/client';
@@ -11,13 +12,13 @@ function generateTempPassword(): string {
 }
 
 export async function GET(req: NextRequest) {
-  const { user, error } = requireAuth(req, ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN']);
+  const { user, error } = requirePermission(req, 'employees:manage');
   if (error) return error;
 
   try {
     const url = new URL(req.url);
     const status = url.searchParams.get('status') as EmployeeStatus | null;
-    const workCenterId = url.searchParams.get('workCenterId');
+    const workCenterId = url.searchParams.get('workCenterId') ?? getActiveClinicId(req);
     const department = url.searchParams.get('department');
     const search = url.searchParams.get('search');
     const page = parseInt(url.searchParams.get('page') ?? '1');
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { user, error } = requireAuth(req, ['COMPANY_ADMIN', 'HR', 'SUPERADMIN']);
+  const { user, error } = requirePermission(req, 'employees:manage');
   if (error) return error;
 
   try {

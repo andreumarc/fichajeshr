@@ -1,8 +1,10 @@
 'use client';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import Cookies from 'js-cookie';
 import api from '@/lib/api';
 import { useGlobalFilters } from '@/hooks/useGlobalFilters';
+import { can } from '@/lib/permissions';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import {
@@ -27,6 +29,14 @@ function ReportsPageInner() {
   const [month, setMonth] = useState(now.month() + 1);
   const [selectedEmp, setSelectedEmp] = useState('');
   const [exportLoading, setExportLoading] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    try { setRole(JSON.parse(Cookies.get('user') ?? '{}').role ?? null); } catch { setRole(null); }
+  }, []);
+
+  const canViewReports = can(role, 'reports:view');
+  const canExportPayroll = can(role, 'payroll:export');
 
   const { data: employees } = useQuery({
     queryKey: ['employees-select', ...globalFilters.queryKeyPart],
@@ -82,6 +92,14 @@ function ReportsPageInner() {
     { worked: 0, breaks: 0, days: 0 },
   );
 
+  if (role && !canViewReports) {
+    return (
+      <div className="card text-center py-12 text-sm text-slate-500">
+        No tienes permiso para ver informes.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -90,14 +108,16 @@ function ReportsPageInner() {
           <h1 className="text-xl font-bold text-slate-900">Informes</h1>
           <p className="text-sm text-slate-500 mt-0.5 capitalize">{monthLabel}</p>
         </div>
-        <button
-          onClick={handleExport}
-          disabled={exportLoading}
-          className="btn-secondary text-sm gap-2"
-        >
-          <Download size={15} className={exportLoading ? 'animate-pulse' : ''} />
-          {exportLoading ? 'Generando...' : 'Exportar'}
-        </button>
+        {canExportPayroll && (
+          <button
+            onClick={handleExport}
+            disabled={exportLoading}
+            className="btn-secondary text-sm gap-2"
+          >
+            <Download size={15} className={exportLoading ? 'animate-pulse' : ''} />
+            {exportLoading ? 'Generando...' : 'Exportar'}
+          </button>
+        )}
       </div>
 
       {/* Controls */}

@@ -1,8 +1,10 @@
 'use client';
 import { Suspense, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Cookies from 'js-cookie';
 import api from '@/lib/api';
 import { useGlobalFilters } from '@/hooks/useGlobalFilters';
+import { can } from '@/lib/permissions';
 import {
   Settings, Save, Loader2, Building2, MessageSquare,
   MapPin, Bell, Shield, Check, Globe,
@@ -71,6 +73,13 @@ function SettingsPageInner() {
   const globalFilters = useGlobalFilters();
   const qc = useQueryClient();
   const [saved, setSaved] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    try { setRole(JSON.parse(Cookies.get('user') ?? '{}').role ?? null); } catch { setRole(null); }
+  }, []);
+
+  const canManageSettings = can(role, 'settings:manage');
 
   const { data: company, isLoading } = useQuery({
     queryKey: ['company-settings', ...globalFilters.queryKeyPart],
@@ -141,6 +150,14 @@ function SettingsPageInner() {
     return (
       <div className="flex items-center justify-center py-24 text-slate-400">
         <Loader2 className="animate-spin" size={24} />
+      </div>
+    );
+  }
+
+  if (role && !canManageSettings) {
+    return (
+      <div className="card text-center py-12 text-sm text-slate-500">
+        Configuración reservada a Dirección General / Admin.
       </div>
     );
   }

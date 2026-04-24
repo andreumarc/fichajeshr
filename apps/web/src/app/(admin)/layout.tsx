@@ -15,8 +15,10 @@ import { ImpulsoDentIcon } from '@/components/ImpulsoDentIcon';
 import { useState, useEffect, Suspense } from 'react';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 import { GlobalFilters } from '@/components/layout/global-filters';
+import { ClinicSwitcher } from '@/components/layout/clinic-switcher';
 import Cookies from 'js-cookie';
 import api from '@/lib/api';
+import { can, type Permission } from '@/lib/permissions';
 import clsx from 'clsx';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -57,41 +59,51 @@ function TopbarAvatar({ firstName = '', lastName = '' }: { firstName?: string; l
   );
 }
 
-/* ─── nav definition ──────────────────────────────────────────── */
-const NAV_GROUPS = [
+/* ─── nav definition ──────────────────────────────────────────────
+ * Visibility is driven by the centralized permission matrix in
+ * @/lib/permissions. `permission: undefined` = visible to all roles.
+ * ───────────────────────────────────────────────────────────────── */
+type NavItemDef = {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  permission?: Permission;
+};
+
+const NAV_GROUPS: { key: string; label: string; items: NavItemDef[] }[] = [
   {
     key: 'principal',
     label: 'PRINCIPAL',
     items: [
-      { href: '/admin/dashboard',    label: 'Dashboard',           icon: LayoutDashboard, roles: undefined },
-      { href: '/admin/time-entries', label: 'Fichajes',             icon: Clock,           roles: undefined },
-      { href: '/admin/schedules',    label: 'Horarios',             icon: CalendarDays,    roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
+      { href: '/admin/dashboard',    label: 'Dashboard',  icon: LayoutDashboard },
+      { href: '/admin/time-entries', label: 'Fichajes',   icon: Clock,        permission: 'entries:view-team' },
+      { href: '/admin/schedules',    label: 'Horarios',   icon: CalendarDays, permission: 'employees:manage' },
     ],
   },
   {
     key: 'gestion',
     label: 'GESTIÓN',
     items: [
-      { href: '/admin/work-centers', label: 'Centros de trabajo', icon: Building2, roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
+      { href: '/admin/work-centers', label: 'Centros de trabajo', icon: Building2, permission: 'settings:manage' },
     ],
   },
   {
     key: 'admin',
     label: 'ADMINISTRACIÓN',
     items: [
-      { href: '/admin/leave-requests', label: 'Ausencias',           icon: CalendarOff,   roles: ['COMPANY_ADMIN', 'HR', 'MANAGER', 'SUPERADMIN'] },
-      { href: '/admin/incidents',      label: 'Incidencias',         icon: FileText,      roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
-      { href: '/admin/reports',        label: 'Informes',            icon: BarChart3,     roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
-      { href: '/admin/whatsapp',       label: 'WhatsApp',            icon: MessageSquare, roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
+      { href: '/admin/leave-requests', label: 'Ausencias',    icon: CalendarOff,   permission: 'entries:approve' },
+      { href: '/admin/incidents',      label: 'Incidencias',  icon: FileText,      permission: 'entries:approve' },
+      { href: '/admin/reports',        label: 'Informes',     icon: BarChart3,     permission: 'reports:view' },
+      { href: '/admin/whatsapp',       label: 'WhatsApp',     icon: MessageSquare, permission: 'settings:manage' },
     ],
   },
   {
     key: 'system',
     label: 'SISTEMA',
     items: [
-      { href: '/admin/audit',    label: 'Auditoría',     icon: ShieldCheck,  roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
-      { href: '/admin/settings', label: 'Configuración', icon: Settings,     roles: ['COMPANY_ADMIN', 'SUPERADMIN'] },
-      { href: '/admin/account',  label: 'Mi perfil',     icon: UserCircle,   roles: undefined },
+      { href: '/admin/audit',    label: 'Auditoría',     icon: ShieldCheck, permission: 'settings:manage' },
+      { href: '/admin/settings', label: 'Configuración', icon: Settings,    permission: 'settings:manage' },
+      { href: '/admin/account',  label: 'Mi perfil',     icon: UserCircle },
     ],
   },
 ];
@@ -197,7 +209,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav className="flex-1 px-2 py-4 space-y-5 overflow-y-auto sidebar-scroll">
           {NAV_GROUPS.map((group) => {
             const visible = group.items.filter(
-              item => !item.roles || item.roles.includes(user.role),
+              item => !item.permission || can(user.role, item.permission),
             );
             if (visible.length === 0) return null;
             return (
@@ -366,6 +378,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Right */}
           <div className="flex items-center gap-1.5">
+            {/* Clinic switcher (only renders for multi-clinic users) */}
+            <Suspense fallback={null}>
+              <ClinicSwitcher />
+            </Suspense>
+
             {/* Bell */}
             <button className="relative p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
               <Bell className="w-5 h-5" />

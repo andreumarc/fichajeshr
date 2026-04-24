@@ -1,8 +1,10 @@
 'use client';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Cookies from 'js-cookie';
 import api from '@/lib/api';
 import { useGlobalFilters } from '@/hooks/useGlobalFilters';
+import { can } from '@/lib/permissions';
 import dayjs from 'dayjs';
 import { Filter, Download, MapPin, MapPinOff, Edit2, Trash2, Loader2 } from 'lucide-react';
 
@@ -43,6 +45,15 @@ function TimeEntriesPageInner() {
   });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    try { setRole(JSON.parse(Cookies.get('user') ?? '{}').role ?? null); } catch { setRole(null); }
+  }, []);
+
+  const canViewTeam    = can(role, 'entries:view-team');
+  const canApprove     = can(role, 'entries:approve');
+  const canExportPayroll = can(role, 'payroll:export');
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['time-entries', filters, ...globalFilters.queryKeyPart],
@@ -96,13 +107,23 @@ function TimeEntriesPageInner() {
     '',
   ];
 
+  if (role && !canViewTeam) {
+    return (
+      <div className="card text-center py-12 text-sm text-slate-500">
+        No tienes permiso para ver los fichajes del equipo.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Fichajes</h1>
-        <button onClick={handleExport} className="btn-secondary text-sm gap-2">
-          <Download size={16} /> Exportar
-        </button>
+        {canExportPayroll && (
+          <button onClick={handleExport} className="btn-secondary text-sm gap-2">
+            <Download size={16} /> Exportar
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -212,9 +233,13 @@ function TimeEntriesPageInner() {
                     </td>
                     <td className="py-3 px-4 text-xs text-gray-400">{entry.clockMethod}</td>
                     <td className="py-3 px-4">
-                      <button className="p-1.5 hover:bg-gray-100 rounded-lg" title="Editar">
-                        <Edit2 size={14} className="text-gray-400" />
-                      </button>
+                      {canApprove ? (
+                        <button className="p-1.5 hover:bg-gray-100 rounded-lg" title="Editar">
+                          <Edit2 size={14} className="text-gray-400" />
+                        </button>
+                      ) : (
+                        <span className="text-xs text-gray-300">—</span>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -253,7 +278,7 @@ function TimeEntriesPageInner() {
       </div>
 
       {/* Bulk action bar */}
-      {selected.size > 0 && (
+      {canApprove && selected.size > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 bg-brand-800 text-white px-5 py-3 rounded-2xl shadow-2xl shadow-brand-900/40">
           <span className="text-sm font-semibold">
             {selected.size} {selected.size !== 1 ? 'seleccionados' : 'seleccionado'}
