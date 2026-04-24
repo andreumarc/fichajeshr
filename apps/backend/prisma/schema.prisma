@@ -21,10 +21,12 @@ datasource db {
 
 enum UserRole {
   SUPERADMIN
-  COMPANY_ADMIN
-  HR
-  MANAGER
-  EMPLOYEE
+  ADMIN
+  DIRECCION_GENERAL
+  DIRECCION_CLINICA
+  RRHH
+  ODONTOLOGO
+  AUXILIAR
   KIOSK
   DEMO
 }
@@ -283,7 +285,7 @@ model User {
   passwordHash String
   firstName    String
   lastName     String
-  role         UserRole   @default(EMPLOYEE)
+  role         UserRole   @default(AUXILIAR)
   isActive     Boolean    @default(true)
   lastLogin    DateTime?
   loginAttempts Int       @default(0)

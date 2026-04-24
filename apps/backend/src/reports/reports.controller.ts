@@ -18,13 +18,13 @@ export class ReportsController {
   constructor(private readonly service: ReportsService) {}
 
   @Get('dashboard')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA, UserRole.SUPERADMIN)
   getDashboard(@CurrentUser() user: any) {
     return this.service.getDashboardStats(user.companyId);
   }
 
   @Get('monthly-summary')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   getMonthlySummary(
     @CurrentUser() user: any,
     @Query('year') year: number,
@@ -35,7 +35,7 @@ export class ReportsController {
   }
 
   @Get('incidents')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA, UserRole.SUPERADMIN)
   getIncidents(
     @CurrentUser() user: any,
     @Query('from') from?: string,
@@ -45,7 +45,7 @@ export class ReportsController {
   }
 
   @Get('export-excel')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   async exportExcel(
     @CurrentUser() user: any,
     @Query('from') from: string,

@@ -47,7 +47,7 @@ export class IncidentsController {
   // ─── Admin/HR endpoints ────────────────────────────────────────
 
   @Get()
-  @Roles(UserRole.SUPERADMIN, UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER)
+  @Roles(UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA)
   @ApiOperation({ summary: 'Get all incidents (admin)' })
   adminGetAll(
     @CurrentUser() user: any,
@@ -66,20 +66,20 @@ export class IncidentsController {
   }
 
   @Get('summary')
-  @Roles(UserRole.SUPERADMIN, UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER)
+  @Roles(UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA)
   getSummary(@CurrentUser() user: any) {
     return this.service.getSummary(user.companyId);
   }
 
   @Post()
-  @Roles(UserRole.SUPERADMIN, UserRole.COMPANY_ADMIN, UserRole.HR)
+  @Roles(UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.RRHH)
   @ApiOperation({ summary: 'Create incident for an employee (admin)' })
   createByAdmin(@Body() dto: CreateIncidentDto, @CurrentUser() user: any) {
     return this.service.createByAdmin(user.companyId, dto, user.id);
   }
 
   @Patch(':id/status')
-  @Roles(UserRole.SUPERADMIN, UserRole.COMPANY_ADMIN, UserRole.HR)
+  @Roles(UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.RRHH)
   @ApiOperation({ summary: 'Update incident status' })
   updateStatus(
     @Param('id') id: string,

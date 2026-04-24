@@ -15,7 +15,7 @@ export class AuditController {
   constructor(private readonly auditService: AuditService) {}
 
   @Get()
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   findAll(
     @CurrentUser() user: any,
     @Query('page') page = 1,

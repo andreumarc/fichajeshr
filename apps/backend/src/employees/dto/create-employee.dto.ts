@@ -97,7 +97,7 @@ export class CreateEmployeeDto {
   @IsNumber()
   weeklyHours?: number;
 
-  @ApiProperty({ required: false, enum: UserRole, default: UserRole.EMPLOYEE })
+  @ApiProperty({ required: false, enum: UserRole, default: UserRole.AUXILIAR })
   @IsOptional()
   @IsEnum(UserRole)
   portalRole?: UserRole;

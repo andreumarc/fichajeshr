@@ -16,32 +16,32 @@ export class LeaveRequestsController {
 
   // Employee endpoints
   @Post()
-  @Roles(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR, UserRole.COMPANY_ADMIN)
+  @Roles(UserRole.AUXILIAR, UserRole.DIRECCION_CLINICA, UserRole.RRHH, UserRole.ADMIN)
   create(@Body() dto: any, @CurrentUser() user: any) {
     return this.service.create(user.companyId, user.employeeId, dto);
   }
 
   @Get('my')
-  @Roles(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR, UserRole.COMPANY_ADMIN)
+  @Roles(UserRole.AUXILIAR, UserRole.DIRECCION_CLINICA, UserRole.RRHH, UserRole.ADMIN)
   myRequests(@CurrentUser() user: any) {
     return this.service.findMyRequests(user.employeeId);
   }
 
   @Get('my/balance')
-  @Roles(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR, UserRole.COMPANY_ADMIN)
+  @Roles(UserRole.AUXILIAR, UserRole.DIRECCION_CLINICA, UserRole.RRHH, UserRole.ADMIN)
   myBalance(@CurrentUser() user: any) {
     return this.service.getBalance(user.employeeId);
   }
 
   @Patch('my/:id/cancel')
-  @Roles(UserRole.EMPLOYEE, UserRole.MANAGER)
+  @Roles(UserRole.AUXILIAR, UserRole.DIRECCION_CLINICA)
   cancel(@Param('id') id: string, @CurrentUser() user: any) {
     return this.service.cancel(id, user.employeeId);
   }
 
   // HR/Admin endpoints
   @Get()
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   findAll(
     @CurrentUser() user: any,
     @Query('status') status?: LeaveStatus,
@@ -52,19 +52,19 @@ export class LeaveRequestsController {
   }
 
   @Get('stats')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   stats(@CurrentUser() user: any) {
     return this.service.getStats(user.companyId);
   }
 
   @Post('sick-leave')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   createSickLeave(@Body() dto: any, @CurrentUser() user: any) {
     return this.service.createSickLeave(user.companyId, dto);
   }
 
   @Patch(':id/review')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   review(
     @Param('id') id: string,
     @Body() dto: { action: 'approve' | 'reject'; hrNotes?: string },
@@ -74,7 +74,7 @@ export class LeaveRequestsController {
   }
 
   @Get(':employeeId/balance')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   getBalance(@Param('employeeId') employeeId: string) {
     return this.service.getBalance(employeeId);
   }

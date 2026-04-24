@@ -44,7 +44,7 @@ export class WhatsAppController {
   // ─── Admin endpoints ───────────────────────────────────────────
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPERADMIN, UserRole.COMPANY_ADMIN, UserRole.HR)
+  @Roles(UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.RRHH)
   @Get('conversations')
   @ApiOperation({ summary: 'List WhatsApp conversations' })
   getConversations(
@@ -57,7 +57,7 @@ export class WhatsAppController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPERADMIN, UserRole.COMPANY_ADMIN, UserRole.HR)
+  @Roles(UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.RRHH)
   @Get('conversations/:id/messages')
   @ApiOperation({ summary: 'Get messages of a conversation' })
   getMessages(

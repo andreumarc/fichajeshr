@@ -22,7 +22,7 @@ export class EmployeesController {
   constructor(private readonly service: EmployeesService) {}
 
   @Get()
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'List employees with filters' })
   findAll(
     @CurrentUser() user: any,
@@ -37,61 +37,61 @@ export class EmployeesController {
   }
 
   @Get('today-status')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Get today clock status for all employees' })
   getTodayStatus(@CurrentUser() user: any) {
     return this.service.getTodayStatus(user.companyId);
   }
 
   @Get(':id')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA, UserRole.SUPERADMIN)
   findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return this.service.findOne(id, user.companyId);
   }
 
   @Post()
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Create employee' })
   create(@Body() dto: CreateEmployeeDto, @CurrentUser() user: any) {
     return this.service.create(user.companyId, dto, user.id);
   }
 
   @Patch(':id')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   update(@Param('id') id: string, @Body() dto: UpdateEmployeeDto, @CurrentUser() user: any) {
     return this.service.update(id, user.companyId, dto, user.id);
   }
 
   @Delete(':id')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   deactivate(@Param('id') id: string, @CurrentUser() user: any) {
     return this.service.deactivate(id, user.companyId, user.id);
   }
 
   @Post(':id/reset-pin')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Reset employee PIN' })
   resetPin(@Param('id') id: string, @Body() body: { pin: string }, @CurrentUser() user: any) {
     return this.service.resetPin(id, user.companyId, body.pin, user.id);
   }
 
   @Post(':id/generate-qr')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Generate QR code for employee' })
   generateQr(@Param('id') id: string, @CurrentUser() user: any) {
     return this.service.generateQrCode(id, user.companyId);
   }
 
   @Post(':id/reset-user-password')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Reset employee user password (admin)' })
   resetUserPassword(@Param('id') id: string, @CurrentUser() user: any) {
     return this.service.resetUserPassword(id, user.companyId, user.id);
   }
 
   @Get(':id/user-info')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Get linked user info for an employee' })
   getUserInfo(@Param('id') id: string, @CurrentUser() user: any) {
     return this.service.getUserInfo(id, user.companyId);
@@ -100,7 +100,7 @@ export class EmployeesController {
   // ── Excel export ─────────────────────────────────────────────────────────────
 
   @Get('export/excel')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Export all employees to Excel' })
   async exportExcel(@CurrentUser() user: any, @Res() res: Response) {
     const buffer = await this.service.exportToExcel(user.companyId);
@@ -112,7 +112,7 @@ export class EmployeesController {
   // ── Excel import / template ───────────────────────────────────────────────────
 
   @Get('import/template')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Download Excel import template' })
   downloadTemplate(@Res() res: Response) {
     const buffer = this.service.generateImportTemplate();
@@ -122,7 +122,7 @@ export class EmployeesController {
   }
 
   @Post('import')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Bulk import employees from Excel file' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }))

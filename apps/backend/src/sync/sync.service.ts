@@ -85,10 +85,14 @@ export class SyncService {
   }
 
   private mapRole(role?: string): UserRole {
-    if (role === 'superadmin') return UserRole.SUPERADMIN
-    if (role === 'admin')      return UserRole.COMPANY_ADMIN
-    if (role === 'hr')         return UserRole.HR
-    if (role === 'manager')    return UserRole.MANAGER
-    return UserRole.EMPLOYEE
+    if (role === 'superadmin')          return UserRole.SUPERADMIN
+    if (role === 'admin')               return UserRole.ADMIN
+    if (role === 'direccion_general')   return UserRole.DIRECCION_GENERAL
+    if (role === 'direccion_clinica')   return UserRole.DIRECCION_CLINICA
+    if (role === 'hr' || role === 'rrhh') return UserRole.RRHH
+    if (role === 'manager')             return UserRole.DIRECCION_CLINICA
+    if (role === 'odontologo')          return UserRole.ODONTOLOGO
+    if (role === 'employee')            return UserRole.AUXILIAR
+    return UserRole.AUXILIAR
   }
 }

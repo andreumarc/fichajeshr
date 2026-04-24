@@ -21,19 +21,19 @@ export class CompaniesController {
   }
 
   @Get('me')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA, UserRole.SUPERADMIN)
   getMyCompany(@CurrentUser() user: any) {
     return this.service.findOne(user.companyId);
   }
 
   @Patch('me')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   updateMyCompany(@Body() dto: any, @CurrentUser() user: any) {
     return this.service.update(user.companyId, dto);
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPERADMIN, UserRole.COMPANY_ADMIN)
+  @Roles(UserRole.SUPERADMIN, UserRole.ADMIN)
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
@@ -45,7 +45,7 @@ export class CompaniesController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.SUPERADMIN, UserRole.COMPANY_ADMIN)
+  @Roles(UserRole.SUPERADMIN, UserRole.ADMIN)
   update(@Param('id') id: string, @Body() dto: any, @CurrentUser() user: any) {
     const companyId = user.role === UserRole.SUPERADMIN ? id : user.companyId;
     return this.service.update(companyId, dto);

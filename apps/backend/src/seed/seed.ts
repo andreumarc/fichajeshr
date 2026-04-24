@@ -218,7 +218,7 @@ async function main() {
       passwordHash,
       firstName: 'Admin',
       lastName: 'TechCorp',
-      role: UserRole.COMPANY_ADMIN,
+      role: UserRole.ADMIN,
       isActive: true,
     },
   });
@@ -230,7 +230,7 @@ async function main() {
       passwordHash,
       firstName: 'Recursos',
       lastName: 'Humanos',
-      role: UserRole.HR,
+      role: UserRole.RRHH,
       isActive: true,
     },
   });
@@ -243,7 +243,7 @@ async function main() {
       passwordHash,
       firstName: 'Ana',
       lastName: 'García',
-      role: UserRole.EMPLOYEE,
+      role: UserRole.AUXILIAR,
       isActive: true,
     },
   });
@@ -256,7 +256,7 @@ async function main() {
       passwordHash,
       firstName: 'Carlos',
       lastName: 'Martínez',
-      role: UserRole.EMPLOYEE,
+      role: UserRole.AUXILIAR,
       isActive: true,
     },
   });
@@ -269,7 +269,7 @@ async function main() {
       passwordHash,
       firstName: 'María',
       lastName: 'Fernández',
-      role: UserRole.EMPLOYEE,
+      role: UserRole.AUXILIAR,
       isActive: true,
     },
   });
@@ -281,7 +281,7 @@ async function main() {
       passwordHash: demoPasswordHash,
       firstName: 'Demo',
       lastName: 'ImpulsoDent',
-      role: UserRole.EMPLOYEE,
+      role: UserRole.AUXILIAR,
       isActive: true,
     },
   });

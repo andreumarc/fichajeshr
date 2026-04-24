@@ -28,19 +28,19 @@ export class WorkCentersController {
   }
 
   @Post()
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   create(@Body() dto: any, @CurrentUser() user: any) {
     return this.service.create(user.companyId, dto, user.id);
   }
 
   @Patch(':id')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   update(@Param('id') id: string, @Body() dto: any, @CurrentUser() user: any) {
     return this.service.update(id, user.companyId, dto, user.id);
   }
 
   @Delete(':id')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string, @CurrentUser() user: any) {
     return this.service.deactivate(id, user.companyId, user.id);

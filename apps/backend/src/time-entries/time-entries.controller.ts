@@ -111,7 +111,7 @@ export class TimeEntriesController {
   // ---- Admin / HR ----
 
   @Get()
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.DIRECCION_CLINICA, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Admin: list all time entries with filters' })
   adminGetAll(
     @CurrentUser() user: any,
@@ -137,7 +137,7 @@ export class TimeEntriesController {
   }
 
   @Patch(':id/manual-edit')
-  @Roles(UserRole.COMPANY_ADMIN, UserRole.HR, UserRole.SUPERADMIN)
+  @Roles(UserRole.ADMIN, UserRole.RRHH, UserRole.SUPERADMIN)
   @ApiOperation({ summary: 'Admin: manually edit a time entry with full audit trail' })
   manualEdit(
     @Param('id') id: string,

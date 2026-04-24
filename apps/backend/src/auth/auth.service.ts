@@ -229,14 +229,19 @@ export class AuthService {
     // 2. Map hub role to app UserRole
     const roleMap: Record<string, string> = {
       SUPERADMIN: 'SUPERADMIN',
-      COMPANY_ADMIN: 'COMPANY_ADMIN',
-      ADMIN: 'COMPANY_ADMIN',
-      HR: 'HR',
-      MANAGER: 'MANAGER',
-      EMPLOYEE: 'EMPLOYEE',
+      ADMIN: 'ADMIN',
+      COMPANY_ADMIN: 'ADMIN',
+      DIRECCION_GENERAL: 'DIRECCION_GENERAL',
+      DIRECCION_CLINICA: 'DIRECCION_CLINICA',
+      RRHH: 'RRHH',
+      HR: 'RRHH',
+      MANAGER: 'DIRECCION_CLINICA',
+      ODONTOLOGO: 'ODONTOLOGO',
+      AUXILIAR: 'AUXILIAR',
+      EMPLOYEE: 'AUXILIAR',
       DEMO: 'DEMO',
     };
-    const appRole = (roleMap[payload.app_role?.toUpperCase()] ?? 'EMPLOYEE') as any;
+    const appRole = (roleMap[payload.app_role?.toUpperCase()] ?? 'AUXILIAR') as any;
 
     // 3. Upsert user
     let user = await this.prisma.user.findUnique({
