@@ -175,6 +175,7 @@ model WorkCenter {
   employees       Employee[]
   timeEntries     TimeEntry[]
   geofenceRules   GeofenceRule[]
+  userAccess      UserWorkCenter[]
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -300,11 +301,30 @@ model User {
   employee     Employee?  @relation(fields: [employeeId], references: [id])
   sessions     UserSession[]
   auditLogs    AuditLog[]
+  workCenters  UserWorkCenter[]
 
   @@index([email])
   @@index([companyId])
   @@index([role])
   @@map("users")
+}
+
+// ============================================================
+// USER ↔ WORK CENTER (multi-clinic access bridge)
+// ============================================================
+
+model UserWorkCenter {
+  userId       String
+  workCenterId String
+  createdAt    DateTime @default(now())
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workCenter   WorkCenter @relation(fields: [workCenterId], references: [id], onDelete: Cascade)
+
+  @@id([userId, workCenterId])
+  @@index([userId])
+  @@index([workCenterId])
+  @@map("user_work_centers")
 }
 
 // ============================================================

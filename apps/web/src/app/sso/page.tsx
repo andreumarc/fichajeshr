@@ -6,12 +6,18 @@ import Cookies from 'js-cookie'
 
 function roleHome(role?: string): string {
   switch (role) {
-    case 'SUPERADMIN':    return '/superadmin/dashboard'
+    case 'SUPERADMIN':         return '/superadmin/dashboard'
+    // Legacy roles — kept for backward compatibility
     case 'COMPANY_ADMIN':
     case 'HR':
-    case 'MANAGER':       return '/admin/dashboard'
-    case 'KIOSK':         return '/kiosk'
-    default:              return '/dashboard'
+    case 'MANAGER':            return '/admin/dashboard'
+    // New unified role system
+    case 'ADMIN':
+    case 'RRHH':
+    case 'DIRECCION_GENERAL':
+    case 'DIRECCION_CLINICA':  return '/admin/dashboard'
+    case 'KIOSK':              return '/kiosk'
+    default:                   return '/dashboard'
   }
 }
 
@@ -32,12 +38,20 @@ function SsoExchange() {
           `/api/v1/auth/hub-sso?hub_token=${encodeURIComponent(hubToken!)}`,
           { credentials: 'include' }
         )
-        if (!res.ok) throw new Error('sso_failed')
-        const json = await res.json()
+        const json = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          const reason = encodeURIComponent(json?.detail ?? json?.message ?? `http_${res.status}`)
+          console.error('[sso] server rejected:', json)
+          router.replace(`/login?error=sso_failed&reason=${reason}`)
+          return
+        }
         const accessToken  = json?.data?.accessToken  ?? json?.accessToken
         const refreshToken = json?.data?.refreshToken ?? json?.refreshToken
         const user         = json?.data?.user         ?? json?.user
-        if (!accessToken || !user) throw new Error('no_token')
+        if (!accessToken || !user) {
+          router.replace('/login?error=sso_failed&reason=no_token')
+          return
+        }
 
         const opts = { secure: true, sameSite: 'strict' as const }
         Cookies.set('access_token',  accessToken,          { ...opts, expires: 1 })
@@ -45,8 +59,10 @@ function SsoExchange() {
         Cookies.set('user',          JSON.stringify(user), { ...opts, expires: 1 })
 
         router.replace(roleHome(user?.role))
-      } catch {
-        router.replace('/login?error=sso_failed')
+      } catch (err: any) {
+        console.error('[sso] network/parse error:', err)
+        const reason = encodeURIComponent(err?.message ?? 'exchange_failed')
+        router.replace(`/login?error=sso_failed&reason=${reason}`)
       }
     }
     exchange()

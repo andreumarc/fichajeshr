@@ -69,19 +69,31 @@ export async function POST(request: NextRequest) {
       companyId = company?.id ?? null
     }
 
-    // Resolve target work center from clinic_ids
+    // Resolve target work centers from clinic_ids
+    // clinic_ids may be: string[] of ids/codes, or the literal 'ALL' for full-company access
     let workCenterId: string | null = null
-    if (companyId && Array.isArray(clinic_ids) && clinic_ids.length > 0) {
-      const wc = await prisma.workCenter.findFirst({
-        where: {
-          companyId,
-          OR: [
-            { id: { in: clinic_ids as string[] } },
-            { code: { in: clinic_ids as string[] } },
-          ],
-        },
-      })
-      workCenterId = wc?.id ?? null
+    let accessibleWorkCenterIds: string[] = []
+    if (companyId) {
+      if (clinic_ids === 'ALL') {
+        const all = await prisma.workCenter.findMany({
+          where: { companyId, deletedAt: null, isActive: true },
+          select: { id: true },
+        })
+        accessibleWorkCenterIds = all.map((w) => w.id)
+      } else if (Array.isArray(clinic_ids) && clinic_ids.length > 0) {
+        const wcs = await prisma.workCenter.findMany({
+          where: {
+            companyId,
+            OR: [
+              { id: { in: clinic_ids as string[] } },
+              { code: { in: clinic_ids as string[] } },
+            ],
+          },
+          select: { id: true },
+        })
+        accessibleWorkCenterIds = wcs.map((w) => w.id)
+      }
+      workCenterId = accessibleWorkCenterIds[0] ?? null
     }
 
     const existing = await prisma.user.findUnique({ where: { email } })
@@ -112,6 +124,26 @@ export async function POST(request: NextRequest) {
         ...(companyId ? { companyId } : {}),
       },
     })
+
+    // Sync UserWorkCenter bridge rows (multi-clinic access)
+    if (companyId && accessibleWorkCenterIds.length > 0) {
+      await prisma.userWorkCenter.deleteMany({
+        where: {
+          userId: user.id,
+          workCenterId: { notIn: accessibleWorkCenterIds },
+        },
+      })
+      for (const wcId of accessibleWorkCenterIds) {
+        await prisma.userWorkCenter.upsert({
+          where: { userId_workCenterId: { userId: user.id, workCenterId: wcId } },
+          create: { userId: user.id, workCenterId: wcId },
+          update: {},
+        })
+      }
+    } else if (companyId && Array.isArray(clinic_ids) && clinic_ids.length === 0) {
+      // Explicitly empty → clear all access
+      await prisma.userWorkCenter.deleteMany({ where: { userId: user.id } })
+    }
 
     // Update/create Employee record and assign workCenter when we have a company
     if (companyId) {

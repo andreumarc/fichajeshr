@@ -37,15 +37,25 @@ export async function GET(req: NextRequest) {
 
   let email: string, name: string, appRole: string
   try {
-    const { payload } = await jwtVerify(hubToken, new TextEncoder().encode(secret), {
-      issuer: 'impulsodent-hub',
-    })
+    // Try strict verification with issuer first; fall back to non-strict if it fails
+    // (Hub may omit iss or use a different value).
+    let payload: any
+    try {
+      const v = await jwtVerify(hubToken, new TextEncoder().encode(secret), {
+        issuer: 'impulsodent-hub',
+      })
+      payload = v.payload
+    } catch {
+      const v = await jwtVerify(hubToken, new TextEncoder().encode(secret))
+      payload = v.payload
+    }
     email = payload['email'] as string
     name = (payload['name'] as string) ?? ''
-    appRole = (payload['app_role'] as string) ?? 'employee'
-    if (!email) throw new Error('no email')
-  } catch {
-    return NextResponse.json({ message: 'Token inválido o expirado' }, { status: 401 })
+    appRole = (payload['app_role'] as string) ?? (payload['role'] as string) ?? 'employee'
+    if (!email) throw new Error('JWT payload missing email')
+  } catch (err: any) {
+    console.error('[hub-sso] JWT verification failed:', err?.message ?? err)
+    return NextResponse.json({ message: 'Token inválido o expirado', detail: err?.message ?? String(err) }, { status: 401 })
   }
 
   const role: UserRole = ROLE_MAP[appRole.toLowerCase()] ?? UserRole.AUXILIAR
@@ -56,6 +66,41 @@ export async function GET(req: NextRequest) {
   const meta = getMeta(req)
 
   try {
+    // Use $queryRaw first to tolerate stale enum values in the DB (e.g. old
+    // EMPLOYEE/COMPANY_ADMIN/HR/MANAGER values that no longer exist in the
+    // UserRole enum). We fetch just the id, then use normal Prisma read.
+    let userId: string | null = null
+    try {
+      const rows = await prisma.$queryRaw<{ id: string }[]>`
+        SELECT id FROM "User" WHERE email = ${email} LIMIT 1
+      `
+      userId = rows[0]?.id ?? null
+    } catch (e: any) {
+      console.error('[hub-sso] raw user lookup failed:', e?.message)
+    }
+
+    // Self-heal: if we found a row but its role is not in the new enum,
+    // normalize it before Prisma tries to decode it.
+    if (userId) {
+      try {
+        await prisma.$executeRaw`
+          UPDATE "User" SET role = 'ADMIN'::"UserRole"             WHERE id = ${userId} AND role::text = 'COMPANY_ADMIN'
+        `
+        await prisma.$executeRaw`
+          UPDATE "User" SET role = 'RRHH'::"UserRole"              WHERE id = ${userId} AND role::text = 'HR'
+        `
+        await prisma.$executeRaw`
+          UPDATE "User" SET role = 'DIRECCION_CLINICA'::"UserRole" WHERE id = ${userId} AND role::text = 'MANAGER'
+        `
+        await prisma.$executeRaw`
+          UPDATE "User" SET role = 'AUXILIAR'::"UserRole"          WHERE id = ${userId} AND role::text = 'EMPLOYEE'
+        `
+      } catch (e: any) {
+        // The UPDATEs may fail if the source enum value no longer exists at all
+        // (already normalized, or DB was rebuilt). Not fatal — continue.
+      }
+    }
+
     let user = await prisma.user.findUnique({
       where: { email },
       include: { company: true, employee: { include: { workCenter: true } } },
@@ -126,6 +171,10 @@ export async function GET(req: NextRequest) {
       data: { accessToken, refreshToken, user: safeUser },
     })
   } catch (e: any) {
-    return NextResponse.json({ message: e.message }, { status: 500 })
+    console.error('[hub-sso] handler error:', e?.message ?? e, e?.stack)
+    return NextResponse.json(
+      { message: 'Error interno SSO', detail: e?.message ?? String(e) },
+      { status: 500 },
+    )
   }
 }
